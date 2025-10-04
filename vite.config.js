@@ -1,23 +1,25 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// https://vite.dev/config/
-export default defineConfig(
-  {
-    plugins: [react()],
-  },
-  {
-    server: {
-      port: 5173,
-      host: "0.0.0.0",
-      hmr: {
-        host: "wemear.com", // **สำคัญ: แก้ไข HMR ให้ทำงานกับโดเมน (HTTPS)**
-        protocol: "wss", // **สำคัญ: ใช้ WebSocket Secure**
-      },
-      allowedHosts: [
-        'wemear.com',
-        'www.wemear.com',
-      ],
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  
+  // *** นี่คือส่วนที่ถูกต้อง: server อยู่ใน Object เดียวกับ plugins ***
+  server: {
+    port: 5173,
+    host: "0.0.0.0", // ฟังทุก IP เพื่อให้ Nginx เข้าถึงได้
+    
+    // ตั้งค่า HMR สำหรับ Reverse Proxy
+    hmr: {
+      host: "wemear.com", 
+      protocol: "wss", 
     },
-  }
-);
+    
+    // อนุญาตให้เข้าถึงผ่านโดเมนเหล่านี้
+    allowedHosts: [
+      'wemear.com',
+      'www.wemear.com',
+    ],
+  },
+});
