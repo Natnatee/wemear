@@ -17,11 +17,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
 
       # --- ส่วนสำคัญ: SSH และ Deployment ---
       - name: Deploy via SSH
@@ -40,8 +37,8 @@ jobs:
 
             # 2. ติดตั้ง dependencies และ Build Production (สร้าง dist ใหม่)
             # โฟลเดอร์ dist เก่าจะถูกลบและสร้างใหม่โดย pnpm run build
-            pnpm install        
-            pnpm run build      
+            npm install        
+            npm run build      
 
             # 3. *** จัดการสิทธิ์ทั้งหมด: แก้ปัญหา 500 Internal Server Error ***
             echo "Setting necessary directory and file permissions for Nginx..."
