@@ -3,7 +3,7 @@ name: Deploy Frontend to VPS
 on:
   push:
     branches:
-      - main # กำหนดให้ทำงานเมื่อมีการ push ไปที่ branch 'main' เท่านั้น
+      - main
 
 jobs:
   deploy:
@@ -12,15 +12,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      # ขั้นตอนนี้จะทำบน GitHub Runner และไม่จำเป็นต้องมี pnpm เพราะเราไม่ได้ Build ที่นี่
-      - name: Install dependencies locally
-        run: npm install -g pnpm || true # ติดตั้ง pnpm บน Runner (เพื่อให้ผ่านขั้นตอนถัดไป)
-
       # --- ส่วนสำคัญ: SSH และ Deployment ---
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -28,21 +19,23 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # คำสั่งทั้งหมดที่จะรันบน VPS ของคุณ
           script: |
             echo "Starting deployment on server with user 'developer' permissions."
             cd /home/developer/wemear
-            
+
             # 1. ดึงโค้ดล่าสุดจาก GitHub
             git pull origin main 
-            
-            # 2. *** แก้ปัญหา PATH: ติดตั้ง pnpm ใน Session นี้ (บังคับให้ระบบรู้จัก) ***
+
+            # 2. โหลด nvm และ Node เวอร์ชันที่ติดตั้ง
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use 20
+
+            # 3. ติดตั้ง pnpm (ถ้ายังไม่มี) และ Dependencies
             npm install -g pnpm
-            
-            # 3. ติดตั้ง Dependencies และ Build Production 
             pnpm install        
             pnpm run build      
-            
+
             # 4. รีโหลด Nginx
             sudo systemctl reload nginx
             echo "Deployment successful and Nginx reloaded."
