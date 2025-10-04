@@ -15,16 +15,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # ใช้ Node.js เวอร์ชัน 20 ที่คุณใช้
+          node-version: 20
 
       - name: Install pnpm
         run: npm install -g pnpm
 
       - name: Install dependencies
         run: pnpm install
-
-      - name: Build Production
-        run: pnpm run build
 
       # --- ส่วนสำคัญ: SSH และ Deployment ---
       - name: Deploy via SSH
@@ -37,20 +34,25 @@ jobs:
           script: |
             echo "Starting deployment on server..."
             cd /home/developer/wemear
-            git pull origin main # 1. ดึงโค้ดล่าสุด
 
-            pnpm install        # 2. ติดตั้ง dependencies 
-            pnpm run build      # 3. Build Production (สร้างโฟลเดอร์ dist ใหม่)
+            # 1. ดึงโค้ดล่าสุดจาก GitHub
+            git pull origin main 
 
-            # 4. *** เพิ่ม: ยืนยันสิทธิ์การเดินผ่าน (Traverse) ให้กับ Nginx ***
+            # 2. ติดตั้ง dependencies และ Build Production (สร้าง dist ใหม่)
+            pnpm install        
+            pnpm run build      
+
+            # 3. *** จัดการสิทธิ์ที่สำคัญทั้งหมด (Permissions Fix) ***
+            echo "Setting necessary directory and file permissions for Nginx..."
+
+            # อนุญาตให้ www-data (Nginx) เดินผ่าน Home และ Project Directory ได้
             sudo chmod o+x /home/developer
             sudo chmod o+x /home/developer/wemear
 
-            # 5. แก้ไขสิทธิ์ของโฟลเดอร์ dist ใหม่ทันที
-            echo "Setting ownership and permissions for Nginx..."
+            # เปลี่ยนเจ้าของโฟลเดอร์ dist ที่เพิ่งสร้างใหม่ทั้งหมด
             sudo chown -R www-data:www-data /home/developer/wemear/dist
             sudo chmod -R 755 /home/developer/wemear/dist
 
-            # 6. รีโหลด Nginx
+            # 4. รีโหลด Nginx เพื่อเสิร์ฟไฟล์ใหม่
             sudo systemctl reload nginx
             echo "Deployment successful and Nginx reloaded."
