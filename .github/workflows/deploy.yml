@@ -25,7 +25,7 @@ jobs:
 
       - name: Build Production
         run: pnpm run build
-        
+
       # --- ส่วนสำคัญ: SSH และ Deployment ---
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -35,30 +35,22 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           # คำสั่งทั้งหมดที่จะรันบน VPS ของคุณ
           script: |
-            # 1. ลบไฟล์ dist เดิมและคัดลอกไฟล์ใหม่
-            rm -rf /home/developer/wemear/dist_old
-            mv /home/developer/wemear/dist /home/developer/wemear/dist_old
-            
-            # 2. คัดลอกไฟล์ที่ Build มาจาก GitHub Actions ไปยังเซิร์ฟเวอร์
-            # (ไฟล์จะอยู่ใน /home/developer/wemear/_work/... 
-            #  แต่เราจะใช้ rsync เพื่อให้การคัดลอกไฟล์เกิดขึ้น)
-            # *** คำสั่งนี้อาจต้องปรับ: ปกติเราใช้ rsync ระหว่างเครื่อง หรือใช้scp
-            # เนื่องจาก appleboy/ssh-action ไม่ได้มี rsync/scp ในตัวสำหรับการย้ายไฟล์จาก Action ไป Server โดยตรง
-            # วิธีที่ดีที่สุดคือ: git pull บน Server แทน
-            
-            # **แก้ไข Script ให้ใช้ Git Pull บน Server แทน**
-            echo "Pulling latest code and deploying..."
+            echo "Starting deployment on server..."
             cd /home/developer/wemear
-            git pull origin main # ดึงโค้ดล่าสุด
-            
-            # 3. ติดตั้ง dependencies และ build บน Server โดยตรง (ปลอดภัยกว่าและง่ายกว่า)
-            pnpm install
-            pnpm run build
-            
-            # 4. จัดการสิทธิ์
+            git pull origin main # 1. ดึงโค้ดล่าสุด
+
+            pnpm install        # 2. ติดตั้ง dependencies 
+            pnpm run build      # 3. Build Production (สร้างโฟลเดอร์ dist ใหม่)
+
+            # 4. *** เพิ่ม: ยืนยันสิทธิ์การเดินผ่าน (Traverse) ให้กับ Nginx ***
+            sudo chmod o+x /home/developer
+            sudo chmod o+x /home/developer/wemear
+
+            # 5. แก้ไขสิทธิ์ของโฟลเดอร์ dist ใหม่ทันที
+            echo "Setting ownership and permissions for Nginx..."
             sudo chown -R www-data:www-data /home/developer/wemear/dist
             sudo chmod -R 755 /home/developer/wemear/dist
-            
-            # 5. รีโหลด Nginx
+
+            # 6. รีโหลด Nginx
             sudo systemctl reload nginx
             echo "Deployment successful and Nginx reloaded."
