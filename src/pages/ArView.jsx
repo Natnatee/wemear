@@ -4,7 +4,7 @@ import { Canvas } from '@react-three/fiber';
 
 function ArView() {
   return (
-    <div style={{ height: '100vh', width: '100vw' }}>
+    <div style={{ height: '100%', width: '100%' }}>
       <Canvas>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />

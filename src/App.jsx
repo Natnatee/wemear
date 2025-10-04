@@ -9,11 +9,6 @@ import "./App.css";
 function App() {
   return (
     <Router>
-      <nav>
-        <Link to="/">หน้าหลัก</Link> |<Link to="/ar">เริ่ม AR</Link> |
-        <Link to="/test">🧪 ทดสอบ</Link> {/* 2. เพิ่ม Link ใหม่ */}
-      </nav>
-
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
