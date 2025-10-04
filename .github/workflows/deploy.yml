@@ -32,17 +32,18 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           # คำสั่งทั้งหมดที่จะรันบน VPS ของคุณ
           script: |
-            echo "Starting deployment on server..."
+            echo "Starting deployment on server, no dist_old rename."
             cd /home/developer/wemear
 
             # 1. ดึงโค้ดล่าสุดจาก GitHub
             git pull origin main 
 
             # 2. ติดตั้ง dependencies และ Build Production (สร้าง dist ใหม่)
+            # โฟลเดอร์ dist เก่าจะถูกลบและสร้างใหม่โดย pnpm run build
             pnpm install        
             pnpm run build      
 
-            # 3. *** จัดการสิทธิ์ที่สำคัญทั้งหมด (Permissions Fix) ***
+            # 3. *** จัดการสิทธิ์ทั้งหมด: แก้ปัญหา 500 Internal Server Error ***
             echo "Setting necessary directory and file permissions for Nginx..."
 
             # อนุญาตให้ www-data (Nginx) เดินผ่าน Home และ Project Directory ได้
