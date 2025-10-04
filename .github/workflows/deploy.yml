@@ -17,8 +17,9 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm install
+      # เราจะรัน install บน Server แทน เพื่อให้มั่นใจว่า Environment ตรงกัน
+      - name: Install dependencies locally (For runner to find pnpm)
+        run: npm install -g pnpm && pnpm install
 
       # --- ส่วนสำคัญ: SSH และ Deployment ---
       - name: Deploy via SSH
@@ -29,21 +30,21 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           # คำสั่งทั้งหมดที่จะรันบน VPS ของคุณ
           script: |
-            echo "Starting deployment on server, no dist_old rename."
+            echo "Starting deployment on server."
             cd /home/developer/wemear
 
             # 1. ดึงโค้ดล่าสุดจาก GitHub
             git pull origin main 
 
-            # 2. ติดตั้ง dependencies และ Build Production (สร้าง dist ใหม่)
-            # โฟลเดอร์ dist เก่าจะถูกลบและสร้างใหม่โดย pnpm run build
-            npm install        
-            npm run build      
+            # 2. *** สำคัญ: ติดตั้งและ Build โดยใช้ pnpm ***
+            # *ต้องมั่นใจว่า pnpm ถูกติดตั้งบน Server แล้ว*
+            pnpm install        # ติดตั้ง Dependencies ใหม่
+            pnpm run build      # Build Production (สร้าง dist ใหม่)
 
-            # 3. *** จัดการสิทธิ์ทั้งหมด: แก้ปัญหา 500 Internal Server Error ***
+            # 3. จัดการสิทธิ์ทั้งหมด (แก้ปัญหา 500 Internal Server Error)
             echo "Setting necessary directory and file permissions for Nginx..."
 
-            # อนุญาตให้ www-data (Nginx) เดินผ่าน Home และ Project Directory ได้
+            # ยืนยันสิทธิ์การเดินผ่าน
             sudo chmod o+x /home/developer
             sudo chmod o+x /home/developer/wemear
 
