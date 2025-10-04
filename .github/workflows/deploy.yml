@@ -1,0 +1,64 @@
+name: Deploy Frontend to VPS
+
+on:
+  push:
+    branches:
+      - main # กำหนดให้ทำงานเมื่อมีการ push ไปที่ branch 'main' เท่านั้น
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # ใช้ Node.js เวอร์ชัน 20 ที่คุณใช้
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Production
+        run: pnpm run build
+        
+      # --- ส่วนสำคัญ: SSH และ Deployment ---
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # คำสั่งทั้งหมดที่จะรันบน VPS ของคุณ
+          script: |
+            # 1. ลบไฟล์ dist เดิมและคัดลอกไฟล์ใหม่
+            rm -rf /home/developer/wemear/dist_old
+            mv /home/developer/wemear/dist /home/developer/wemear/dist_old
+            
+            # 2. คัดลอกไฟล์ที่ Build มาจาก GitHub Actions ไปยังเซิร์ฟเวอร์
+            # (ไฟล์จะอยู่ใน /home/developer/wemear/_work/... 
+            #  แต่เราจะใช้ rsync เพื่อให้การคัดลอกไฟล์เกิดขึ้น)
+            # *** คำสั่งนี้อาจต้องปรับ: ปกติเราใช้ rsync ระหว่างเครื่อง หรือใช้scp
+            # เนื่องจาก appleboy/ssh-action ไม่ได้มี rsync/scp ในตัวสำหรับการย้ายไฟล์จาก Action ไป Server โดยตรง
+            # วิธีที่ดีที่สุดคือ: git pull บน Server แทน
+            
+            # **แก้ไข Script ให้ใช้ Git Pull บน Server แทน**
+            echo "Pulling latest code and deploying..."
+            cd /home/developer/wemear
+            git pull origin main # ดึงโค้ดล่าสุด
+            
+            # 3. ติดตั้ง dependencies และ build บน Server โดยตรง (ปลอดภัยกว่าและง่ายกว่า)
+            pnpm install
+            pnpm run build
+            
+            # 4. จัดการสิทธิ์
+            sudo chown -R www-data:www-data /home/developer/wemear/dist
+            sudo chmod -R 755 /home/developer/wemear/dist
+            
+            # 5. รีโหลด Nginx
+            sudo systemctl reload nginx
+            echo "Deployment successful and Nginx reloaded."
