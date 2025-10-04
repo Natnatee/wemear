@@ -14,6 +14,10 @@ export default defineConfig(
         host: "wemear.com", // **สำคัญ: แก้ไข HMR ให้ทำงานกับโดเมน (HTTPS)**
         protocol: "wss", // **สำคัญ: ใช้ WebSocket Secure**
       },
+      allowedHosts: [
+        'wemear.com',
+        'www.wemear.com',
+      ],
     },
   }
 );
