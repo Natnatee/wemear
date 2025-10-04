@@ -17,9 +17,9 @@ jobs:
         with:
           node-version: 20
 
-      # ติดตั้ง pnpm ใน GitHub Runner เพื่อให้ Action นี้สามารถเรียกใช้ pnpm ได้
+      # ขั้นตอนนี้จะทำบน GitHub Runner และไม่จำเป็นต้องมี pnpm เพราะเราไม่ได้ Build ที่นี่
       - name: Install dependencies locally
-        run: npm install -g pnpm && pnpm install
+        run: npm install -g pnpm || true # ติดตั้ง pnpm บน Runner (เพื่อให้ผ่านขั้นตอนถัดไป)
 
       # --- ส่วนสำคัญ: SSH และ Deployment ---
       - name: Deploy via SSH
@@ -32,16 +32,17 @@ jobs:
           script: |
             echo "Starting deployment on server with user 'developer' permissions."
             cd /home/developer/wemear
-
+            
             # 1. ดึงโค้ดล่าสุดจาก GitHub
             git pull origin main 
-
-            # 2. ติดตั้ง Dependencies และ Build Production 
-            # (ผู้ใช้ developer สร้างไฟล์ได้ทันที)
+            
+            # 2. *** แก้ปัญหา PATH: ติดตั้ง pnpm ใน Session นี้ (บังคับให้ระบบรู้จัก) ***
+            npm install -g pnpm
+            
+            # 3. ติดตั้ง Dependencies และ Build Production 
             pnpm install        
             pnpm run build      
-
-            # 3. รีโหลด Nginx
-            # คำสั่งนี้ยังต้องใช้ sudo เพราะ systemctl ต้องใช้สิทธิ์ระดับ root
+            
+            # 4. รีโหลด Nginx
             sudo systemctl reload nginx
             echo "Deployment successful and Nginx reloaded."
