@@ -1,19 +1,17 @@
-import React from 'react';
+import React from "react";
+import Project from "@/components/Project";
+
+const sampleProjects = [
+  { image: 'https://via.placeholder.com/300x200', name: 'MoralMan', owner: 'Designer', date: '15 May 25 | Published' },
+  { image: 'https://via.placeholder.com/300x200', name: 'Untitled project', owner: 'Designer legacy', date: '3 Mar 25 | Published' },
+  { image: 'https://via.placeholder.com/300x200', name: 'Untitled project', owner: 'Designer legacy', date: '24 Dec 24 | Published' },
+  { image: 'https://via.placeholder.com/300x200', name: 'TCDC Virtual 360', owner: 'Designer', date: '12 Oct 24 | Published' },
+  { image: 'https://via.placeholder.com/300x200', name: 'TEST SOUND', owner: 'Designer legacy', date: '20 Sep 24 | Unpublished' },
+  { image: 'https://via.placeholder.com/300x200', name: 'Untitled project', owner: 'Designer legacy', date: '18 Sep 24 | Published' },
+];
 
 function Home() {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-6">
-      <h1 className="text-2xl font-bold text-blue-600 mb-4">
-        ยินดีต้อนรับสู่โปรเจกต์ Web AR 4
-      </h1>
-      <p className="text-lg text-gray-700 mb-6">
-        คลิกที่ "เริ่ม AR" เพื่อเข้าสู่ประสบการณ์ AR
-      </p>
-      <button className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-        เริ่ม AR
-      </button>
-    </div>
-  );
+  return <Project projects={sampleProjects} />
 }
 
 export default Home;
