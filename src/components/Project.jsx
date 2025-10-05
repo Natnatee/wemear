@@ -181,7 +181,7 @@ const Project = ({ projects }) => {
             {/* Modal Content (Empty for now) */}
             <div className="p-4">
               <h2 className="text-xl font-bold  text-gray-800 text-center">
-                Select a tracking type for your new scene
+                Select Tool
               </h2>
               <ModalTool />
             </div>

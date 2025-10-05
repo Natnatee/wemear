@@ -2,12 +2,17 @@ import React from "react";
 import { modalTool } from "../make_data/modal_tool.js";
 
 const ModalTool = () => {
+  // เรียงให้ Active มาก่อน
+  const sortedTools = [...modalTool].sort((a, b) => {
+    if (a.status === "Active" && b.status !== "Active") return -1;
+    if (a.status !== "Active" && b.status === "Active") return 1;
+    return 0;
+  });
+
   return (
     <div className="p-6 max-h-[80vh] overflow-y-auto">
-      {" "}
-      {/* modal scroll ภายนอก */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {modalTool.map((tool, index) => (
+        {sortedTools.map((tool, index) => (
           <button
             key={index}
             className={`relative bg-white rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg ${
@@ -25,15 +30,14 @@ const ModalTool = () => {
               </div>
             )}
 
-            {/* Image section */}
-
+            {/* Image */}
             <img
               src={tool.image}
               alt={tool.name}
               className="w-full h-36 object-cover"
             />
 
-            {/* Bottom info */}
+            {/* Info */}
             <div className="bg-white text-center p-4 border-t border-gray-100">
               <h3
                 className={`text-sm font-semibold mb-1 ${
