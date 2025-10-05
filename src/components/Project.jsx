@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import CardProject from "@/components/CardProject";
+import ModalTool from "@/components/ModalTool";
 
 const Project = ({ projects }) => {
   const [filters, setFilters] = useState({
@@ -10,15 +11,13 @@ const Project = ({ projects }) => {
     date: "",
     search: "",
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // ดึงรายการที่ไม่ซ้ำกันจากข้อมูล
   const uniqueOwners = [...new Set(projects.map((p) => p.owner))];
   const uniqueTools = [...new Set(projects.map((p) => p.tool))];
   const uniqueStatuses = [...new Set(projects.map((p) => p.status))];
   const uniqueLabels = [...new Set(projects.map((p) => p.label))];
-  // ไม่ต้องใช้ uniqueDates เพราะจะกรองโดยการเรียงลำดับ
 
-  // ฟังก์ชันกรองแบบ intersect
   const filteredProjects = projects
     .filter((project) => {
       const matchesOwner = !filters.owner || project.owner === filters.owner;
@@ -42,8 +41,19 @@ const Project = ({ projects }) => {
         return new Date(b.date) - new Date(a.date);
       if (filters.date === "Older Created")
         return new Date(a.date) - new Date(b.date);
-      return 0; // ไม่เรียงถ้าไม่ได้เลือก
+      return 0;
     });
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
+  // Handle click outside modal
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      toggleModal();
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -51,7 +61,10 @@ const Project = ({ projects }) => {
         <div className="flex items-center">
           <h2 className="text-2xl font-bold p-2 flex items-center">
             Projects ({projects.length}){" "}
-            <button className="text-red-500 ml-2 inline-block border border-transparent hover:border-2 hover:border-red-500 rounded px-2 py-1">
+            <button
+              className="text-red-500 ml-2 inline-block border border-transparent hover:border-2 hover:border-red-500 rounded px-2 py-1"
+              onClick={toggleModal}
+            >
               + Add
             </button>
           </h2>
@@ -137,6 +150,44 @@ const Project = ({ projects }) => {
           <CardProject key={index} project={project} />
         ))}
       </div>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn "
+          onClick={handleOverlayClick}
+        >
+          <div className="bg-white  rounded-lg shadow-lg relative animate-slideIn">
+            {/* Close Button */}
+            <button
+              className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white border-2 border-red-500 rounded-full hover:bg-red-50 transition-colors"
+              onClick={toggleModal}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 4L4 12M4 4L12 12"
+                  stroke="#EF4444"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+            {/* Modal Content (Empty for now) */}
+            <div className="p-4">
+              <h2 className="text-xl font-bold  text-gray-800 text-center">
+                Select a tracking type for your new scene
+              </h2>
+              <ModalTool />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
