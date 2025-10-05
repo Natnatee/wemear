@@ -1,6 +1,6 @@
 import React from "react";
 
-const Card = ({ project }) => {
+const CardProject = ({ project }) => {
   return (
     <div className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow relative">
       <img
@@ -40,4 +40,4 @@ const Card = ({ project }) => {
   );
 };
 
-export default Card;
+export default CardProject;

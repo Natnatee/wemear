@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Card from "./Card";
+import CardProject from "@/components/CardProject";
 
 const Project = ({ projects }) => {
   const [filters, setFilters] = useState({
@@ -134,7 +134,7 @@ const Project = ({ projects }) => {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filteredProjects.map((project, index) => (
-          <Card key={index} project={project} />
+          <CardProject key={index} project={project} />
         ))}
       </div>
     </div>
