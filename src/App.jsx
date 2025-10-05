@@ -4,7 +4,6 @@ import Home from "./pages/Home";
 import ArView from "./pages/ArView";
 import TestPage from "./pages/TestPage"; // 1. Import TestPage
 import NotFound from "./pages/NotFound";
-import "./App.css";
 
 function App() {
   return (
