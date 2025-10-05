@@ -47,13 +47,15 @@ const Project = ({ projects }) => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4 min-h-[60px]">
-        <h2 className="text-2xl font-bold p-2 flex items-center">
-          Projects ({projects.length}){" "}
-          <button className="text-red-500 ml-2 inline-block border border-transparent hover:border-2 hover:border-red-500 rounded px-2 py-1">
-            + Add
-          </button>
-        </h2>
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 min-h-[60px] gap-4">
+        <div className="flex items-center">
+          <h2 className="text-2xl font-bold p-2 flex items-center">
+            Projects ({projects.length}){" "}
+            <button className="text-red-500 ml-2 inline-block border border-transparent hover:border-2 hover:border-red-500 rounded px-2 py-1">
+              + Add
+            </button>
+          </h2>
+        </div>
         <div className="flex space-x-4 items-center">
           <input
             type="text"
@@ -67,8 +69,8 @@ const Project = ({ projects }) => {
           </button>
         </div>
       </div>
-      <div className="my-4 flex justify-between">
-        <div className="flex space-x-4">
+      <div className="my-4 flex flex-wrap justify-between gap-4">
+        <div className="flex flex-wrap gap-4">
           <select
             className="border rounded p-2"
             value={filters.owner}
