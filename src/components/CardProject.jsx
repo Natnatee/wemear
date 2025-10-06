@@ -9,9 +9,9 @@ const CardProject = ({ project }) => {
         className="w-full h-48 object-cover"
       />
       <img
-        src="/wemear.png"
+        src="/weme_ar_shadow.jpg"
         alt="wemear"
-        className="absolute top-42 left-6 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 object-cover"
+        className="absolute top-42 left-6 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 object-cover rounded-full shadow"
       />
       {project.label && (
         <div className="absolute top-2 left-2 bg-white text-blue-500 text-sm font-semibold px-2 py-1 rounded border border-gray-200">
