@@ -1,0 +1,17 @@
+import React from "react";
+import TestArMind from "../components/tests/TestArMind";
+import TestCompileMind from "../components/tests/TestCompileMind";
+import TestFlowBite from "../components/tests/TestFlowBite";
+// TODO: Import Component ทดสอบอื่นๆ ที่จะสร้างในอนาคต เช่น
+
+function TestPage() {
+  return (
+    <div >
+      {/* <TestArMind /> */}
+      {/* <TestCompileMind /> */}
+      <TestFlowBite />
+    </div>
+  );
+}
+
+export default TestPage;

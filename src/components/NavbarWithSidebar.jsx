@@ -30,9 +30,9 @@ export default function NavbarWithSidebar() {
   return (
     <>
       {/* Navbar */}
-      <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50 ">
+        <div className=" px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-12">
             {/* Menu Button + Logo */}
             <div className="flex items-center gap-4">
               <button
@@ -51,6 +51,8 @@ export default function NavbarWithSidebar() {
           </div>
         </div>
       </nav>
+      <div className="h-12">
+      </div>
 
       {/* Backdrop */}
       {isSidebarOpen && (

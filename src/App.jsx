@@ -4,16 +4,26 @@ import Home from "./pages/Home";
 import ArView from "./pages/ArView";
 import TestPage from "./pages/TestPage"; // 1. Import TestPage
 import NotFound from "./pages/NotFound";
+import TestComponent from "./pages/TestComponent";
+import NavbarWithSidebar from "./components/NavbarWithSidebar";
 
 function App() {
   return (
     <Router>
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <>
+                <NavbarWithSidebar />
+                <Home />
+              </>
+            }
+          />
           <Route path="/ar" element={<ArView />} />
-          <Route path="/test" element={<TestPage />} />{" "}
-          {/* 3. เพิ่ม Route ใหม่ */}
+          <Route path="/testpage" element={<TestPage />} />
+          <Route path="/testcomponent" element={<TestComponent />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
