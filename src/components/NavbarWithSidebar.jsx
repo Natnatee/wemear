@@ -8,17 +8,29 @@ import {
   LayoutDashboard,
   LogIn,
   UserPlus,
+  Plus,
+  FolderPlus,
 } from "lucide-react";
+import { workspace } from "../make_data/workspace";
 
 export default function NavbarWithSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
+  const [workspaces, setWorkspaces] = useState(workspace);
+  const handleAddWorkspace = () => {
+    const newWorkspace = {
+      workspace_id: String(workspaces.length + 1),
+      user_id: '1',
+      share_user_id: [],
+      name: `New Workspace ${workspaces.length + 1}`
+    };
+    setWorkspaces([...workspaces, newWorkspace]);
+  };
 
   const menuItems = [
     {
-      name: "Dashboard",
+      name: "Project",
       icon: LayoutDashboard,
-      href: "#dashboard",
       badge: null,
       type: "modal",
     },
@@ -126,11 +138,11 @@ export default function NavbarWithSidebar() {
       {/* Floating Modal (ชิดขวา sidebar) */}
       {activeModal && (
         <div
-          className={`fixed top-14 left-[260px] z-50 w-80 bg-white rounded-xl shadow-xl border border-gray-100 transition-all duration-300 ease-in-out`}
+          className={`fixed top-14 left-1/2 -translate-x-1/2 md:left-[260px] md:translate-x-0 z-50 w-80 bg-white rounded-xl shadow-xl border border-gray-100 transition-all duration-300 ease-in-out`}
         >
           <div className="flex items-center justify-between p-4 border-b">
             <h5 className="text-base font-semibold text-gray-600 uppercase">
-              {activeModal}
+              my work space
             </h5>
             <button
               onClick={() => setActiveModal(null)}
@@ -139,10 +151,23 @@ export default function NavbarWithSidebar() {
               <X size={20} />
             </button>
           </div>
-          <div className="p-4">
-            <p className="text-gray-600 text-sm">
-              เนื้อหา modal ของ {activeModal}
-            </p>
+          <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
+            {workspaces.map((ws) => (
+              <div 
+                key={ws.workspace_id}
+                className="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+              >
+                <FolderPlus size={18} className="text-gray-500 mr-3" />
+                <span className="text-gray-700">{ws.name}</span>
+              </div>
+            ))}
+            <button
+              onClick={handleAddWorkspace}
+              className="w-full flex items-center justify-center p-3 mt-4 text-blue-600 hover:bg-blue-50 rounded-lg border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors"
+            >
+              <Plus size={18} className="mr-2" />
+              New Workspace
+            </button>
           </div>
         </div>
       )}
