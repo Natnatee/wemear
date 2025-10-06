@@ -12,6 +12,7 @@ import {
 
 export default function NavbarWithSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState(null);
 
   const menuItems = [
     {
@@ -19,6 +20,7 @@ export default function NavbarWithSidebar() {
       icon: LayoutDashboard,
       href: "#dashboard",
       badge: null,
+      type: "modal",
     },
     { name: "Users", icon: Users, href: "#users", badge: null },
     { name: "Products", icon: ShoppingBag, href: "#products", badge: null },
@@ -27,13 +29,21 @@ export default function NavbarWithSidebar() {
     { name: "Sign Up", icon: UserPlus, href: "#signup", badge: null },
   ];
 
+  const handleItemClick = (item) => {
+    if (item.type === "modal") {
+      setActiveModal(item.name);
+    } else {
+      setIsSidebarOpen(false);
+      setActiveModal(null);
+    }
+  };
+
   return (
     <>
       {/* Navbar */}
-      <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50 ">
-        <div className=" px-4 sm:px-6 lg:px-8">
+      <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-12">
-            {/* Menu Button + Logo */}
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -43,22 +53,22 @@ export default function NavbarWithSidebar() {
               </button>
               <span className="text-xl font-semibold text-gray-800">Logo</span>
             </div>
-
-            {/* Right side content */}
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">Welcome</span>
             </div>
           </div>
         </div>
       </nav>
-      <div className="h-12">
-      </div>
+      <div className="h-12"></div>
 
       {/* Backdrop */}
-      {isSidebarOpen && (
+      {(isSidebarOpen || activeModal) && (
         <div
-          className="fixed inset-0 bg-gray-900/50 z-40 transition-opacity"
-          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-gray-900/30 z-40 transition-opacity"
+          onClick={() => {
+            setIsSidebarOpen(false);
+            setActiveModal(null);
+          }}
         />
       )}
 
@@ -68,30 +78,30 @@ export default function NavbarWithSidebar() {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h5 className="text-base font-semibold text-gray-500 uppercase">
             Menu
           </h5>
           <button
-            onClick={() => setIsSidebarOpen(false)}
+            onClick={() => {
+              setIsSidebarOpen(false);
+              setActiveModal(null);
+            }}
             className="text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg p-1.5 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Sidebar Menu */}
         <div className="py-4 overflow-y-auto h-full">
           <ul className="space-y-2 px-3">
             {menuItems.map((item) => {
               const Icon = item.icon;
               return (
                 <li key={item.name}>
-                  <a
-                    href={item.href}
-                    className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group transition-colors"
-                    onClick={() => setIsSidebarOpen(false)}
+                  <button
+                    onClick={() => handleItemClick(item)}
+                    className="w-full flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group transition-colors text-left"
                   >
                     <Icon
                       size={20}
@@ -105,13 +115,37 @@ export default function NavbarWithSidebar() {
                         {item.badge}
                       </span>
                     )}
-                  </a>
+                  </button>
                 </li>
               );
             })}
           </ul>
         </div>
       </div>
+
+      {/* Floating Modal (ชิดขวา sidebar) */}
+      {activeModal && (
+        <div
+          className={`fixed top-14 left-[260px] z-50 w-80 bg-white rounded-xl shadow-xl border border-gray-100 transition-all duration-300 ease-in-out`}
+        >
+          <div className="flex items-center justify-between p-4 border-b">
+            <h5 className="text-base font-semibold text-gray-600 uppercase">
+              {activeModal}
+            </h5>
+            <button
+              onClick={() => setActiveModal(null)}
+              className="text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg p-1.5 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="p-4">
+            <p className="text-gray-600 text-sm">
+              เนื้อหา modal ของ {activeModal}
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
