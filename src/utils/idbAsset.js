@@ -38,7 +38,11 @@ export async function saveAsset(url, data) {
 export async function fetchAndCacheAsset(url) {
   // ลองโหลดจาก IndexedDB ก่อน
   let data = await getAsset(url);
-  if (data) return data;
+  if (data) {
+    console.log(`Loaded from IndexedDB: ${url}`);
+    return data;
+  }
+  console.log(`Fetching from network: ${url}`);
 
   // ถ้าไม่มี โหลดจาก network แล้วเก็บ
   const res = await fetch(url);
