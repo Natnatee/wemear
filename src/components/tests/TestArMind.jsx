@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
-import { make_mind_ar } from "../../make_data/make_mind_ar"; // ✅ import แบบ destructure
+import { make_mind_ar } from "../../make_data/make_mind_ar";
+import convert_three_to_aframe from "../../utils/convert_three_to_aframe";
+import { fetchAndCacheAsset } from "../../utils/idbAsset"; // <-- เพิ่มบรรทัดนี้
 
 const TestArMind = () => {
   useEffect(() => {
@@ -21,7 +23,8 @@ const TestArMind = () => {
       await waitForMindAR();
 
       // ✅ ใช้ make_mind_ar แทน API
-      const arData = make_mind_ar[0];
+      const converted = convert_three_to_aframe(make_mind_ar[0]);
+      const arData = converted;
       if (!arData || !arData["image tracking"] || !arData.mindFile) {
         console.error("Invalid data structure from make_mind_ar.");
         return;
@@ -89,11 +92,17 @@ const TestArMind = () => {
           `targetIndex: ${targetIndex}`
         );
 
-        models.forEach((t, modelIdx) => {
+        for (let modelIdx = 0; modelIdx < models.length; modelIdx++) {
+          const t = models[modelIdx];
+
+          // ใช้ fetchAndCacheAsset กับทุก type ที่เป็นไฟล์
           if (t.type === "Video") {
+            const blob = await fetchAndCacheAsset(t.src);
+            const objectUrl = URL.createObjectURL(blob);
+
             const video = document.createElement("video");
             video.id = `video-${targetIndex}-${modelIdx}`;
-            video.src = t.src;
+            video.src = objectUrl;
             video.autoplay = t.autoplay ?? false;
             video.loop = t.loop ?? false;
             video.muted = t.muted ?? true;
@@ -112,8 +121,11 @@ const TestArMind = () => {
           }
 
           if (t.type === "3D Model") {
+            const blob = await fetchAndCacheAsset(t.src);
+            const objectUrl = URL.createObjectURL(blob);
+
             const model = document.createElement("a-gltf-model");
-            model.setAttribute("src", t.src);
+            model.setAttribute("src", objectUrl);
             model.setAttribute("scale", t.scale.join(" "));
             model.setAttribute("position", t.position.join(" "));
             model.setAttribute(
@@ -124,8 +136,11 @@ const TestArMind = () => {
           }
 
           if (t.type === "Image") {
+            const blob = await fetchAndCacheAsset(t.src);
+            const objectUrl = URL.createObjectURL(blob);
+
             const img = document.createElement("a-image");
-            img.setAttribute("src", t.src);
+            img.setAttribute("src", objectUrl);
             img.setAttribute("scale", t.scale.join(" "));
             img.setAttribute("position", t.position.join(" "));
             img.setAttribute(
@@ -135,7 +150,7 @@ const TestArMind = () => {
             if (t.opacity !== undefined) img.setAttribute("opacity", t.opacity);
             entity.appendChild(img);
           }
-        });
+        }
 
         scene.appendChild(entity);
         targetIndex++;
