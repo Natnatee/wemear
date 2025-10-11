@@ -3,7 +3,7 @@ export const make_mind_ar = [
     id: "4dce27a0-486c-4d87-a0b7-7c6b66dd210e",
     created_at: "2025-09-14T16:16:56.29961+00:00",
     "image tracking": {
-      target0: [
+      target1: [
         {
           src: "https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/public/assets/AS0101_pamh6b.jpg",
           type: "Image",
@@ -13,7 +13,7 @@ export const make_mind_ar = [
           rotation: [0, 0, 0],
         },
       ],
-      target1: [
+      target2: [
         {
           src: "https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/public/assets/flower.mp4",
           loop: true,
@@ -25,7 +25,7 @@ export const make_mind_ar = [
           rotation: [0, 0, 0],
         },
       ],
-      target2: [
+      target3: [
         {
           src: "https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/assets/uploads_files_2882496_Shine+Sprite.gltf",
           type: "3D Model",
@@ -34,7 +34,7 @@ export const make_mind_ar = [
           rotation: [0, 0, 0],
         },
       ],
-      target3: [
+      target4: [
         {
           src: "https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/assets/uploads_files_2882496_Shine+Sprite.gltf",
           type: "3D Model",
