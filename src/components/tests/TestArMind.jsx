@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { make_mind_ar } from "../../make_data/make_mind_ar"; // ✅ import แบบ destructure
+import { convertToAframe } from "../../utils/threeToAframe"; // ✅ import ฟังก์ชันแปลงค่า
 
 const TestArMind = () => {
   useEffect(() => {
@@ -102,11 +103,11 @@ const TestArMind = () => {
 
             const videoEl = document.createElement("a-video");
             videoEl.setAttribute("src", `#video-${targetIndex}-${modelIdx}`);
-            videoEl.setAttribute("scale", t.scale.join(" "));
-            videoEl.setAttribute("position", t.position.join(" "));
+            videoEl.setAttribute("scale", convertToAframe(t.scale, "scale"));
+            videoEl.setAttribute("position", convertToAframe(t.position, "position"));
             videoEl.setAttribute(
               "rotation",
-              t.rotation ? t.rotation.join(" ") : "0 0 0"
+              t.rotation ? convertToAframe(t.rotation, "rotation") : "0 0 0"
             );
             entity.appendChild(videoEl);
           }
@@ -114,11 +115,11 @@ const TestArMind = () => {
           if (t.type === "3D Model") {
             const model = document.createElement("a-gltf-model");
             model.setAttribute("src", t.src);
-            model.setAttribute("scale", t.scale.join(" "));
-            model.setAttribute("position", t.position.join(" "));
+            model.setAttribute("scale", convertToAframe(t.scale, "scale"));
+            model.setAttribute("position", convertToAframe(t.position, "position"));
             model.setAttribute(
               "rotation",
-              t.rotation ? t.rotation.join(" ") : "0 0 0"
+              t.rotation ? convertToAframe(t.rotation, "rotation") : "0 0 0"
             );
             entity.appendChild(model);
           }
@@ -126,11 +127,11 @@ const TestArMind = () => {
           if (t.type === "Image") {
             const img = document.createElement("a-image");
             img.setAttribute("src", t.src);
-            img.setAttribute("scale", t.scale.join(" "));
-            img.setAttribute("position", t.position.join(" "));
+            img.setAttribute("scale", convertToAframe(t.scale, "scale"));
+            img.setAttribute("position", convertToAframe(t.position, "position"));
             img.setAttribute(
               "rotation",
-              t.rotation ? t.rotation.join(" ") : "0 0 0"
+              t.rotation ? convertToAframe(t.rotation, "rotation") : "0 0 0"
             );
             if (t.opacity !== undefined) img.setAttribute("opacity", t.opacity);
             entity.appendChild(img);
