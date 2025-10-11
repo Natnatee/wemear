@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { make_mind_ar } from "../../make_data/make_mind_ar"; // ✅ import แบบ destructure
 import { convertToAframe } from "../../utils/threeToAframe"; // ✅ import ฟังก์ชันแปลงค่า
+import { fetchAndCacheAsset } from "../../utils/idbAsset";
 
 const TestArMind = () => {
   useEffect(() => {
@@ -90,11 +91,16 @@ const TestArMind = () => {
           `targetIndex: ${targetIndex}`
         );
 
-        models.forEach((t, modelIdx) => {
+        for (let modelIdx = 0; modelIdx < models.length; modelIdx++) {
+          const t = models[modelIdx];
+
           if (t.type === "Video") {
+            const blob = await fetchAndCacheAsset(t.src);
+            const objectUrl = URL.createObjectURL(blob);
+
             const video = document.createElement("video");
             video.id = `video-${targetIndex}-${modelIdx}`;
-            video.src = t.src;
+            video.src = objectUrl;
             video.autoplay = t.autoplay ?? false;
             video.loop = t.loop ?? false;
             video.muted = t.muted ?? true;
@@ -104,7 +110,10 @@ const TestArMind = () => {
             const videoEl = document.createElement("a-video");
             videoEl.setAttribute("src", `#video-${targetIndex}-${modelIdx}`);
             videoEl.setAttribute("scale", convertToAframe(t.scale, "scale"));
-            videoEl.setAttribute("position", convertToAframe(t.position, "position"));
+            videoEl.setAttribute(
+              "position",
+              convertToAframe(t.position, "position")
+            );
             videoEl.setAttribute(
               "rotation",
               t.rotation ? convertToAframe(t.rotation, "rotation") : "0 0 0"
@@ -113,10 +122,21 @@ const TestArMind = () => {
           }
 
           if (t.type === "3D Model") {
+            const blob = await fetchAndCacheAsset(t.src);
+            const objectUrl = URL.createObjectURL(blob);
+
+            const assetItem = document.createElement("a-asset-item");
+            assetItem.id = `model-${targetIndex}-${modelIdx}`;
+            assetItem.setAttribute("src", objectUrl);
+            assets.appendChild(assetItem);
+
             const model = document.createElement("a-gltf-model");
-            model.setAttribute("src", t.src);
+            model.setAttribute("src", `#model-${targetIndex}-${modelIdx}`);
             model.setAttribute("scale", convertToAframe(t.scale, "scale"));
-            model.setAttribute("position", convertToAframe(t.position, "position"));
+            model.setAttribute(
+              "position",
+              convertToAframe(t.position, "position")
+            );
             model.setAttribute(
               "rotation",
               t.rotation ? convertToAframe(t.rotation, "rotation") : "0 0 0"
@@ -125,10 +145,22 @@ const TestArMind = () => {
           }
 
           if (t.type === "Image") {
+            const blob = await fetchAndCacheAsset(t.src);
+            const objectUrl = URL.createObjectURL(blob);
+
+            const imgElement = document.createElement("img");
+            imgElement.id = `img-${targetIndex}-${modelIdx}`;
+            imgElement.src = objectUrl;
+            imgElement.crossOrigin = "anonymous";
+            assets.appendChild(imgElement);
+
             const img = document.createElement("a-image");
-            img.setAttribute("src", t.src);
+            img.setAttribute("src", `#img-${targetIndex}-${modelIdx}`);
             img.setAttribute("scale", convertToAframe(t.scale, "scale"));
-            img.setAttribute("position", convertToAframe(t.position, "position"));
+            img.setAttribute(
+              "position",
+              convertToAframe(t.position, "position")
+            );
             img.setAttribute(
               "rotation",
               t.rotation ? convertToAframe(t.rotation, "rotation") : "0 0 0"
@@ -136,11 +168,17 @@ const TestArMind = () => {
             if (t.opacity !== undefined) img.setAttribute("opacity", t.opacity);
             entity.appendChild(img);
           }
-        });
+        }
 
         scene.appendChild(entity);
         targetIndex++;
       }
+
+      // After the loop, wait for assets to load before proceeding (to fix timing/overlap)
+      assets.setAttribute("timeout", "30000"); // Optional: 30s timeout for loading
+      await new Promise((resolve) => {
+        assets.addEventListener("loaded", resolve, { once: true });
+      });
 
       scene.addEventListener("arReady", () => {
         Object.keys(targets).forEach((key, tIdx) => {
