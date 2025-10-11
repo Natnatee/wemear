@@ -23,8 +23,7 @@ const TestArMind = () => {
       await waitForMindAR();
 
       // ✅ ใช้ make_mind_ar แทน API
-      const converted = convert_three_to_aframe(make_mind_ar[0]);
-      const arData = converted;
+      const arData = make_mind_ar[0];
       if (!arData || !arData["image tracking"] || !arData.mindFile) {
         console.error("Invalid data structure from make_mind_ar.");
         return;
@@ -99,12 +98,8 @@ const TestArMind = () => {
             const blob = await fetchAndCacheAsset(t.src);
             const objectUrl = URL.createObjectURL(blob);
 
-            const blob = await fetchAndCacheAsset(t.src);
-            const objectUrl = URL.createObjectURL(blob);
-
             const video = document.createElement("video");
             video.id = `video-${targetIndex}-${modelIdx}`;
-            video.src = objectUrl;
             video.src = objectUrl;
             video.autoplay = t.autoplay ?? false;
             video.loop = t.loop ?? false;
@@ -115,10 +110,7 @@ const TestArMind = () => {
             const videoEl = document.createElement("a-video");
             videoEl.setAttribute("src", `#video-${targetIndex}-${modelIdx}`);
             videoEl.setAttribute("scale", convertToAframe(t.scale, "scale"));
-            videoEl.setAttribute(
-              "position",
-              convertToAframe(t.position, "position")
-            );
+            videoEl.setAttribute("position", convertToAframe(t.position, "position"));
             videoEl.setAttribute(
               "rotation",
               t.rotation ? convertToAframe(t.rotation, "rotation") : "0 0 0"
@@ -138,10 +130,7 @@ const TestArMind = () => {
             const model = document.createElement("a-gltf-model");
             model.setAttribute("src", `#model-${targetIndex}-${modelIdx}`);
             model.setAttribute("scale", convertToAframe(t.scale, "scale"));
-            model.setAttribute(
-              "position",
-              convertToAframe(t.position, "position")
-            );
+            model.setAttribute("position", convertToAframe(t.position, "position"));
             model.setAttribute(
               "rotation",
               t.rotation ? convertToAframe(t.rotation, "rotation") : "0 0 0"
@@ -162,10 +151,7 @@ const TestArMind = () => {
             const img = document.createElement("a-image");
             img.setAttribute("src", `#img-${targetIndex}-${modelIdx}`);
             img.setAttribute("scale", convertToAframe(t.scale, "scale"));
-            img.setAttribute(
-              "position",
-              convertToAframe(t.position, "position")
-            );
+            img.setAttribute("position", convertToAframe(t.position, "position"));
             img.setAttribute(
               "rotation",
               t.rotation ? convertToAframe(t.rotation, "rotation") : "0 0 0"
@@ -174,14 +160,13 @@ const TestArMind = () => {
             entity.appendChild(img);
           }
         }
-        }
 
         scene.appendChild(entity);
         targetIndex++;
       }
 
       // After the loop, wait for assets to load before proceeding (to fix timing/overlap)
-      assets.setAttribute("timeout", "30000"); // Optional: 30s timeout for loading
+      assets.setAttribute("timeout", "30000");  // Optional: 30s timeout for loading
       await new Promise((resolve) => {
         assets.addEventListener("loaded", resolve, { once: true });
       });
