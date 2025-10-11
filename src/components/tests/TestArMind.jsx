@@ -23,7 +23,8 @@ const TestArMind = () => {
       await waitForMindAR();
 
       // ✅ ใช้ make_mind_ar แทน API
-      const arData = make_mind_ar[0];
+      const converted = convert_three_to_aframe(make_mind_ar[0]);
+      const arData = converted;
       if (!arData || !arData["image tracking"] || !arData.mindFile) {
         console.error("Invalid data structure from make_mind_ar.");
         return;
@@ -98,8 +99,12 @@ const TestArMind = () => {
             const blob = await fetchAndCacheAsset(t.src);
             const objectUrl = URL.createObjectURL(blob);
 
+            const blob = await fetchAndCacheAsset(t.src);
+            const objectUrl = URL.createObjectURL(blob);
+
             const video = document.createElement("video");
             video.id = `video-${targetIndex}-${modelIdx}`;
+            video.src = objectUrl;
             video.src = objectUrl;
             video.autoplay = t.autoplay ?? false;
             video.loop = t.loop ?? false;
@@ -168,6 +173,7 @@ const TestArMind = () => {
             if (t.opacity !== undefined) img.setAttribute("opacity", t.opacity);
             entity.appendChild(img);
           }
+        }
         }
 
         scene.appendChild(entity);
