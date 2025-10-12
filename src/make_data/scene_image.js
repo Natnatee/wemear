@@ -1,4 +1,4 @@
-export const scene = [
+export const scene_image = [
   {
     src: "https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/assets/car.glb",
     type: "3D Model",

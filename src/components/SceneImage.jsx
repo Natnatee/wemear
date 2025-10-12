@@ -4,12 +4,12 @@ import { OrbitControls, Plane, Grid } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { TextureLoader, VideoTexture, DoubleSide } from 'three';
 import * as THREE from 'three';
-import { scene } from '../make_data/scene.js';
+
 
 // Extend THREE namespace เพื่อรองรับ video element
 extend({ VideoTexture });
 
-function SceneImage() {
+function SceneImage({scene}) {
   const { scene: threeScene } = useThree();
 
   // ตั้งค่าแสงเหมือนใน modelViewer.js
