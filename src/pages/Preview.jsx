@@ -2,10 +2,11 @@ import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import SceneImage from "../components/SceneImage";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
-import { make_mind_ar } from "../make_data/make_mind_ar.js";
+import { make_mind_ar } from "../make_data/make_mind_ar_2.js";
 
 function Preview2() {
-  const track = make_mind_ar[0]["image tracking"].track4;
+  const track = make_mind_ar[0]["image tracking"].track4.scene;
+  console.log(track);
 
   return (
     <Preview track={track} />
