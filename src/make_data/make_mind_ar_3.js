@@ -91,9 +91,9 @@ export const make_mind_ar = [
       src:"https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/assets/final_2.mind",
       image:{
         image_1:"https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/public/assets/AS0101_pamh6b.jpg",
-        image_2:"https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/public/assets/flower.mp4",
+        image_2:"https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/public/assets/AS0101_pamh6b.jpg",
         image_3:"https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/public/assets/AS0101_pamh6b.jpg",
-        image_4:"https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/public/assets/flower.mp4",  
+        image_4:"https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/public/assets/AS0101_pamh6b.jpg",  
       }
     },
   },

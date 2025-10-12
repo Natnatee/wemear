@@ -1,8 +1,18 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const CardProject = ({ project }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/project/${project.project_id}`);
+  };
+
   return (
-    <div className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow relative">
+    <div
+      className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow relative cursor-pointer"
+      onClick={handleClick}
+    >
       <img
         src={project.image}
         alt={project.name}

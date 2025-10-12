@@ -34,8 +34,10 @@
     "aframe": "^1.7.1",
     "flowbite": "^3.1.2",
     "lucide-react": "^0.544.0",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-qr-code": "^2.0.18",
     "react-router-dom": "^7.9.3",
     "three": "^0.180.0",
     "zustand": "^5.0.8"
