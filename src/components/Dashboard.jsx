@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import CardProject from "@/components/CardProject";
 import ModalTool from "@/components/ModalTool";
 
-const Project = ({ projects }) => {
+const Dashboard = ({ projects }) => {
   const [filters, setFilters] = useState({
     owner: "",
     tool: "",
@@ -192,4 +192,4 @@ const Project = ({ projects }) => {
   );
 };
 
-export default Project;
+export default Dashboard;
