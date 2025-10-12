@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
-import ArView from "./pages/ArView";
+import Preview from "./pages/Preview";
 import TestPage from "./pages/TestPage"; // 1. Import TestPage
 import NotFound from "./pages/NotFound";
 import TestComponent from "./pages/TestComponent";
@@ -22,7 +22,7 @@ function App() {
               </>
             }
           />
-          <Route path="/ar" element={<ArView />} />
+          <Route path="/preview" element={<Preview />} />
           <Route path="/testpage" element={<TestPage />} />
           <Route path="/testcomponent" element={<TestComponent />} />
           <Route path="*" element={<NotFound />} />

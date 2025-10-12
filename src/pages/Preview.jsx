@@ -2,7 +2,7 @@ import React from 'react';
 import { Canvas } from '@react-three/fiber';
 // import ArScene from '../components/ArScene'; // จะสร้างในขั้นตอนถัดไป
 
-function ArView() {
+function Preview() {
   return (
     <div style={{ height: '100%', width: '100%' }}>
       <Canvas>
@@ -23,9 +23,8 @@ function ArView() {
         </mesh>
 
       </Canvas>
-      <p style={{textAlign: 'center'}}>กำลังรัน Three.js Canvas...</p>
     </div>
   );
 }
 
-export default ArView;
+export default Preview;
