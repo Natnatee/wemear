@@ -1,27 +1,23 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-// import ArScene from '../components/ArScene'; // จะสร้างในขั้นตอนถัดไป
+import SceneImage from '../components/SceneImage';
 
 function Preview() {
   return (
-    <div style={{ height: '100%', width: '100%' }}>
+    <div style={{
+      height: '100vh',
+      width: '100vw',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      margin: 0,
+      padding: 0,
+      overflow: 'hidden'
+    }}>
       <Canvas>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        
-        {/*
-          TODO: นำเข้า Component AR/3D ของคุณที่นี่
-          <Suspense fallback={null}>
-            <ArScene />
-          </Suspense>
-        */}
-        
-        {/* ตัวอย่าง Object ง่าย ๆ */}
-        <mesh>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="hotpink" />
-        </mesh>
-
+        <Suspense fallback={null}>
+          <SceneImage />
+        </Suspense>
       </Canvas>
     </div>
   );
