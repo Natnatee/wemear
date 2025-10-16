@@ -1,7 +1,7 @@
 // import { useParams } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
-import CardImage from "../components/CardImage";
+import SceneCard from "../components/SceneCard";
 import QRCodeGenerator from "../components/QRCodeGenerator";
 import { make_project } from "../make_data/make_project.js";
 import projectStore from "../utils/projectStore.js";
@@ -24,6 +24,32 @@ function Project() {
     // บันทึกข้อมูลเข้า Zustand State
     setProject(mockData);
   }, [setProject]); // Array ว่าง [] หรือ [setProject] เพื่อให้รันครั้งเดียว
+
+  // memoize derived array เพื่อไม่คำนวณซ้ำบ่อย ๆ
+  const sceneCards = useMemo(() => {
+    // A. ตรวจสอบ State
+    if (!project) return [];
+
+    // B. นำตรรกะคำนวณจาก sceneImageProject ใน Store มาใส่
+    const imageMode = project.info?.tracking_modes?.image;
+    if (!imageMode) return [];
+
+    const mindImages = imageMode.mindFile?.image || {};
+
+    // C. คำนวณและคืนค่า Array
+    return (imageMode.tracks || []).flatMap((track) => {
+      const trackId = track.track_id;
+      const imgsrc = mindImages[trackId] ?? "/default_asset_image/image.png";
+      const scenes = track.scenes || [];
+      return scenes.map((scene) => ({
+        type: "image",
+        imgsrc,
+        scene_id: `IMAGE_${trackId}${scene.scene_id}`, // IMAGE_T1S1
+        track_id: trackId,
+        scene_key: scene.scene_id,
+      }));
+    });
+  }, [project]); // 4. Dependency คือ 'project' เท่านั้น
 
   if (!project) {
     return (
@@ -122,39 +148,12 @@ function Project() {
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/*
-                ตรวจสอบว่ามีข้อมูล image tracking อยู่ก่อน จากนั้น map tracks -> scenes
-                แต่ละ card ใช้รูปจาก make_project.info.tracking_modes.image.mindFile.image[trackId]
-                id ของแต่ละ card เป็น IMAGE_{trackId}{sceneId} เช่น IMAGE_T1S1
-                ถ้ามีหลาย scene ใน track เดียวกัน จะใช้รูปเดียวกัน
-              */}
-              {project?.info?.tracking_modes?.image?.tracks?.map((track) =>
-                track.scenes?.map((scene) => {
-                  const trackId = track.track_id; // ex "T1"
-                  const sceneId = scene.scene_id; // ex "S1"
-                  const mindImages =
-                    project.info?.tracking_modes?.image?.mindFile?.image || {};
-                  const imgSrc =
-                    mindImages[trackId] ?? "/default_asset_image/image.png";
-                  const cardId = `IMAGE_${trackId}${sceneId}`; // IMAGE_T1S1
-                  return (
-                    <div
-                      key={cardId}
-                      className="bg-white rounded-lg shadow p-3 flex flex-col items-start"
-                    >
-                      <img
-                        src={imgSrc}
-                        alt={cardId}
-                        className="w-full h-40 object-cover rounded mb-3"
-                      />
-                      <div className="text-sm font-medium">{cardId}</div>
-
-                    </div>
-                  );
-                })
-              )}
+              {sceneCards.map((card) => (
+                <SceneCard key={card.scene_id} card={card} />
+              ))}
             </div>
           </div>
+
           {/* ส่วน QR Code */}
           <div className="bg-white rounded-lg shadow-md p-8">
             <QRCodeGenerator link={project.link} />

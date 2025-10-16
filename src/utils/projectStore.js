@@ -3,9 +3,9 @@
 import { create } from "zustand";
 
 const projectStore = create((set) => ({
-  project: [], // กลับไปเป็นค่าเริ่มต้น (State ว่าง)
+  project: null, // เปลี่ยนเป็น null เพื่อเช็คสถานะง่ายขึ้น
   setProject: (newProject) => set({ project: newProject }),
-  removeAllProjects: () => set({ project: [] }),
+  removeAllProjects: () => set({ project: null }),
   setProjectName: (name) =>
     set((state) => ({
       project: { ...state.project, name },
