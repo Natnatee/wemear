@@ -3,6 +3,7 @@ import axiosInstance from "../utils/axios";
 
 // Fetch all workspaces
 export const useWorkspaces = () => {
+  console.log("Fetching workspaces...");
   return useQuery("workspace", async () => {
     const response = await axiosInstance.get("/rest/v1/workspace");
     return response.data;

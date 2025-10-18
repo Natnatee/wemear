@@ -1,9 +1,39 @@
-import React from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Dashboard from "@/components/Dashboard";
 import { useProjects } from "../hook/useProject";
 
 function Home() {
   const { data: projects = [], isLoading, error } = useProjects();
+
+  // Get workspace info from localStorage with state
+  const [workspaceId, setWorkspaceId] = useState(localStorage.getItem("workspace_id"));
+  const [workspaceName, setWorkspaceName] = useState(localStorage.getItem("workspace_name") || "Projects");
+
+  // Listen for workspace changes
+  useEffect(() => {
+    const handleWorkspaceChange = (event) => {
+      setWorkspaceId(event.detail.workspace_id);
+      setWorkspaceName(event.detail.workspace_name);
+    };
+
+    window.addEventListener('workspaceChanged', handleWorkspaceChange);
+
+    return () => {
+      window.removeEventListener('workspaceChanged', handleWorkspaceChange);
+    };
+  }, []);
+
+
+
+  // Filter projects by workspace_id
+  const filteredProjects = useMemo(() => {
+    if (!workspaceId) {
+      return projects;
+    }
+    return projects.filter(project => project.workspace_id === workspaceId);
+  }, [projects, workspaceId]);
+
+  console.log(filteredProjects);
 
   if (isLoading) {
     return (
@@ -27,7 +57,7 @@ function Home() {
     );
   }
 
-  return <Dashboard projects={projects} />;
+  return <Dashboard projects={filteredProjects} workspaceName={workspaceName} />;
 }
 
 export default Home;

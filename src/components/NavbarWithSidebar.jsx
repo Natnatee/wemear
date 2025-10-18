@@ -143,6 +143,25 @@ export default function NavbarWithSidebar() {
     }
   };
 
+  const handleWorkspaceClick = (workspace) => {
+    // Save workspace info to localStorage
+    localStorage.setItem("workspace_id", workspace.workspace_id);
+    localStorage.setItem("workspace_name", workspace.workspace_name);
+
+    // Dispatch custom event to notify workspace change
+    window.dispatchEvent(new CustomEvent('workspaceChanged', {
+      detail: {
+        workspace_id: workspace.workspace_id,
+        workspace_name: workspace.workspace_name
+      }
+    }));
+
+    // Close modals and navigate to home
+    setActiveModal(null);
+    setIsSidebarOpen(false);
+    navigate("/");
+  };
+
   const menuItems = [
     {
       name: "Project",
@@ -314,7 +333,8 @@ export default function NavbarWithSidebar() {
                 {workspaces.map((ws) => (
                   <div
                     key={ws.workspace_id}
-                    className="flex items-center gap-2 p-3 hover:bg-gray-50 rounded-lg transition-colors group"
+                    className="flex items-center gap-2 p-3 hover:bg-gray-50 rounded-lg transition-colors group cursor-pointer"
+                    onClick={() => handleWorkspaceClick(ws)}
                   >
                     <FolderPlus size={18} className="text-gray-500 flex-shrink-0" />
                     <span className="text-gray-700 flex-1">{ws.workspace_name}</span>

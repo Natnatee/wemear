@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import CardProject from "@/components/CardProject";
 import ModalTool from "@/components/ModalTool";
 
-const Dashboard = ({ projects }) => {
+const Dashboard = ({ projects, workspaceName = "Projects" }) => {
   const [filters, setFilters] = useState({
     owner: "",
     tool: "",
@@ -60,7 +60,7 @@ const Dashboard = ({ projects }) => {
       <div className="flex flex-col sm:flex-row justify-between items-center mb-4 min-h-[60px] gap-4">
         <div className="flex items-center">
           <h2 className="text-2xl font-bold p-2 flex items-center">
-            Projects ({projects.length}){" "}
+            {workspaceName} ({projects.length}){" "}
             <button
               className="text-red-500 ml-2 inline-block border border-transparent hover:border-2 hover:border-red-500 rounded px-2 py-1"
               onClick={toggleModal}
