@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn, Home } from "lucide-react";
+import axiosInstance from "../utils/axios";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -26,54 +27,38 @@ function Login() {
     setError("");
 
     try {
-      const response = await fetch("https://supabase.wemear.com/auth/v1/token?grant_type=password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzU2NTkyMDUzLCJleHAiOjIwODE1Nzc2MDB9.KjLYDG826zqcmxDIXIdnUvn-T_RVoSWyUFB-bA_Wm1E",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+      const response = await axiosInstance.post("/auth/v1/token?grant_type=password", {
+        email: formData.email,
+        password: formData.password,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Login successful:", data);
+      const data = response.data;
+      console.log("Login successful:", data);
 
-        // Store token in localStorage
-        localStorage.setItem("access_token", data.access_token);
-        localStorage.setItem("refresh_token", data.refresh_token);
-        localStorage.setItem("user_data", JSON.stringify(data.user));
+      // Store token in localStorage
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
+      localStorage.setItem("user_data", JSON.stringify(data.user));
 
-        // Fetch user_data2 from users table
-        try {
-          const userId = data.user.id;
-          const userResponse = await fetch(`https://supabase.wemear.com/rest/v1/users?select=*&user_id=eq.${userId}`, {
-            headers: {
-              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzU2NTkyMDUzLCJleHAiOjIwODE1Nzc2MDB9.KjLYDG826zqcmxDIXIdnUvn-T_RVoSWyUFB-bA_Wm1E",
-            },
-          });
+      // Fetch user_data2 from users table
+      try {
+        const userId = data.user.id;
+        const userResponse = await axiosInstance.get(`/rest/v1/users?select=*&user_id=eq.${userId}`);
 
-          if (userResponse.ok) {
-            const userData2 = await userResponse.json();
-            if (userData2.length > 0) {
-              localStorage.setItem("user_data2", JSON.stringify(userData2[0]));
-            }
-          }
-        } catch (error) {
-          console.error("Failed to fetch user_data2:", error);
+        if (userResponse.data && userResponse.data.length > 0) {
+          localStorage.setItem("user_data2", JSON.stringify(userResponse.data[0]));
         }
-
-        // Navigate to home page
-        navigate("/");
-      } else {
-        const errorData = await response.json();
-        setError(errorData.msg || errorData.error_description || "Login failed. Please check your credentials.");
+      } catch (error) {
+        console.error("Failed to fetch user_data2:", error);
       }
+
+      // Navigate to home page
+      navigate("/");
     } catch (error) {
-      setError(error.message || "Network error. Please check your connection and try again.");
+      const errorMsg = error.response?.data?.msg ||
+        error.response?.data?.error_description ||
+        "Login failed. Please check your credentials.";
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
