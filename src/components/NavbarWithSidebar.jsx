@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Menu,
   X,
@@ -10,6 +11,7 @@ import {
   UserPlus,
   Plus,
   FolderPlus,
+  LogOut,
 } from "lucide-react";
 import { workspace } from "../make_data/workspace";
 
@@ -17,6 +19,13 @@ export default function NavbarWithSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [workspaces, setWorkspaces] = useState(workspace);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
+
   const handleAddWorkspace = () => {
     const newWorkspace = {
       workspace_id: String(workspaces.length + 1),
@@ -38,7 +47,7 @@ export default function NavbarWithSidebar() {
     // { name: "Products", icon: ShoppingBag, href: "#products", badge: null },
     // { name: "Inbox", icon: Inbox, href: "#inbox", badge: "3" },
     { name: "Sign In", icon: LogIn, href: "#signin", badge: null },
-    { name: "Sign Up", icon: UserPlus, href: "#signup", badge: null },
+    { name: "Sign Up", icon: UserPlus, href: "/register", badge: null }, // เปลี่ยนเป็น link ไปหน้า register
   ];
 
   const handleItemClick = (item) => {
@@ -67,6 +76,13 @@ export default function NavbarWithSidebar() {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">Welcome</span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1 px-2 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+              >
+                <LogOut size={14} />
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -86,9 +102,8 @@ export default function NavbarWithSidebar() {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 z-50 w-64 h-screen bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 z-50 w-64 h-screen bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex items-center justify-between p-4 border-b">
           <h5 className="text-base font-semibold text-gray-500 uppercase">
@@ -111,23 +126,44 @@ export default function NavbarWithSidebar() {
               const Icon = item.icon;
               return (
                 <li key={item.name}>
-                  <button
-                    onClick={() => handleItemClick(item)}
-                    className="w-full flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group transition-colors text-left"
-                  >
-                    <Icon
-                      size={20}
-                      className="text-gray-500 group-hover:text-gray-900 transition-colors"
-                    />
-                    <span className="flex-1 ml-3 whitespace-nowrap">
-                      {item.name}
-                    </span>
-                    {item.badge && (
-                      <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
-                        {item.badge}
+                  {item.href && item.href.startsWith('/') ? (
+                    <Link
+                      to={item.href}
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="w-full flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group transition-colors text-left"
+                    >
+                      <Icon
+                        size={20}
+                        className="text-gray-500 group-hover:text-gray-900 transition-colors"
+                      />
+                      <span className="flex-1 ml-3 whitespace-nowrap">
+                        {item.name}
                       </span>
-                    )}
-                  </button>
+                      {item.badge && (
+                        <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => handleItemClick(item)}
+                      className="w-full flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group transition-colors text-left"
+                    >
+                      <Icon
+                        size={20}
+                        className="text-gray-500 group-hover:text-gray-900 transition-colors"
+                      />
+                      <span className="flex-1 ml-3 whitespace-nowrap">
+                        {item.name}
+                      </span>
+                      {item.badge && (
+                        <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </li>
               );
             })}
@@ -153,7 +189,7 @@ export default function NavbarWithSidebar() {
           </div>
           <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
             {workspaces.map((ws) => (
-              <div 
+              <div
                 key={ws.workspace_id}
                 className="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
               >
