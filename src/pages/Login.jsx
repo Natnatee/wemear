@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LogIn, Home } from "lucide-react";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -47,6 +47,25 @@ function Login() {
         localStorage.setItem("refresh_token", data.refresh_token);
         localStorage.setItem("user_data", JSON.stringify(data.user));
 
+        // Fetch user_data2 from users table
+        try {
+          const userId = data.user.id;
+          const userResponse = await fetch(`https://supabase.wemear.com/rest/v1/users?select=*&user_id=eq.${userId}`, {
+            headers: {
+              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzU2NTkyMDUzLCJleHAiOjIwODE1Nzc2MDB9.KjLYDG826zqcmxDIXIdnUvn-T_RVoSWyUFB-bA_Wm1E",
+            },
+          });
+
+          if (userResponse.ok) {
+            const userData2 = await userResponse.json();
+            if (userData2.length > 0) {
+              localStorage.setItem("user_data2", JSON.stringify(userData2[0]));
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch user_data2:", error);
+        }
+
         // Navigate to home page
         navigate("/");
       } else {
@@ -62,6 +81,15 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="fixed top-4 left-4">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-100 rounded-lg shadow-sm border border-gray-200 transition-colors"
+        >
+          <Home size={16} />
+          <span>Back to Home</span>
+        </button>
+      </div>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <LogIn size={48} className="text-blue-600" />
