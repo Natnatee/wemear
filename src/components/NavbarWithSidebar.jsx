@@ -14,14 +14,19 @@ import {
   FolderPlus,
   LogOut,
 } from "lucide-react";
-import { workspace } from "../make_data/workspace";
+import { useWorkspaces, useCreateWorkspace } from "../hook/useWorkspace";
 
 export default function NavbarWithSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
-  const [workspaces, setWorkspaces] = useState(workspace);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [workspaceName, setWorkspaceName] = useState("");
   const [userData2, setUserData2] = useState(null);
   const navigate = useNavigate();
+
+  // React Query hooks
+  const { data: workspaces = [], isLoading, refetch } = useWorkspaces();
+  const createWorkspaceMutation = useCreateWorkspace();
 
   useEffect(() => {
     // Check if user is logged in
@@ -52,13 +57,37 @@ export default function NavbarWithSidebar() {
   };
 
   const handleAddWorkspace = () => {
-    const newWorkspace = {
-      workspace_id: String(workspaces.length + 1),
-      user_id: '1',
-      share_user_id: [],
-      name: `New Workspace ${workspaces.length + 1}`
-    };
-    setWorkspaces([...workspaces, newWorkspace]);
+    setShowCreateModal(true);
+  };
+
+  const handleCreateWorkspace = async (e) => {
+    e.preventDefault();
+
+    if (!workspaceName.trim()) {
+      return;
+    }
+
+    if (!userData2 || !userData2.user_id) {
+      alert("Please login first");
+      return;
+    }
+
+    try {
+      await createWorkspaceMutation.mutateAsync({
+        workspace_name: workspaceName,
+        user_id: userData2.user_id,
+      });
+
+      // Wait for refetch to complete
+      await refetch();
+
+      // Close modal and reset form
+      setWorkspaceName("");
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error("Failed to create workspace:", error);
+      alert("Failed to create workspace. Please try again.");
+    }
   };
 
   const menuItems = [
@@ -123,12 +152,13 @@ export default function NavbarWithSidebar() {
       <div className="h-12"></div>
 
       {/* Backdrop */}
-      {(isSidebarOpen || activeModal) && (
+      {(isSidebarOpen || activeModal || showCreateModal) && (
         <div
           className="fixed inset-0 bg-gray-900/30 z-40 transition-opacity"
           onClick={() => {
             setIsSidebarOpen(false);
             setActiveModal(null);
+            setShowCreateModal(false);
           }}
         />
       )}
@@ -159,7 +189,7 @@ export default function NavbarWithSidebar() {
               const Icon = item.icon;
               return (
                 <li key={item.name}>
-                  {item.href && item.href.startsWith('/') ? (
+                  {item.href && item.href.startsWith("/") ? (
                     <Link
                       to={item.href}
                       onClick={() => setIsSidebarOpen(false)}
@@ -204,7 +234,7 @@ export default function NavbarWithSidebar() {
         </div>
       </div>
 
-      {/* Floating Modal (ชิดขวา sidebar) */}
+      {/* Floating Modal (ชิดขวา sidebar) - Workspace List */}
       {activeModal && (
         <div
           className={`fixed top-14 left-1/2 -translate-x-1/2 md:left-[260px] md:translate-x-0 z-50 w-80 bg-white rounded-xl shadow-xl border border-gray-100 transition-all duration-300 ease-in-out`}
@@ -221,22 +251,119 @@ export default function NavbarWithSidebar() {
             </button>
           </div>
           <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
-            {workspaces.map((ws) => (
-              <div
-                key={ws.workspace_id}
-                className="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-              >
-                <FolderPlus size={18} className="text-gray-500 mr-3" />
-                <span className="text-gray-700">{ws.name}</span>
+            {isLoading ? (
+              <div className="flex items-center justify-center p-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
-            ))}
-            <button
-              onClick={handleAddWorkspace}
-              className="w-full flex items-center justify-center p-3 mt-4 text-blue-600 hover:bg-blue-50 rounded-lg border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors"
-            >
-              <Plus size={18} className="mr-2" />
-              New Workspace
-            </button>
+            ) : (
+              <>
+                {workspaces.map((ws) => (
+                  <div
+                    key={ws.workspace_id}
+                    className="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                  >
+                    <FolderPlus size={18} className="text-gray-500 mr-3" />
+                    <span className="text-gray-700">{ws.workspace_name}</span>
+                  </div>
+                ))}
+                <button
+                  onClick={handleAddWorkspace}
+                  className="w-full flex items-center justify-center p-3 mt-4 text-blue-600 hover:bg-blue-50 rounded-lg border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors"
+                >
+                  <Plus size={18} className="mr-2" />
+                  New Workspace
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Create Workspace Modal - Center Screen */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-100 w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h5 className="text-lg font-semibold text-gray-900">
+                Create New Workspace
+              </h5>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setWorkspaceName("");
+                }}
+                className="text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg p-1.5 transition-colors"
+                disabled={createWorkspaceMutation.isLoading}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateWorkspace} className="p-6">
+              <div className="mb-4">
+                <label
+                  htmlFor="workspace_name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Workspace Name
+                </label>
+                <input
+                  type="text"
+                  id="workspace_name"
+                  value={workspaceName}
+                  onChange={(e) => setWorkspaceName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter workspace name"
+                  required
+                  disabled={createWorkspaceMutation.isLoading}
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setWorkspaceName("");
+                  }}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  disabled={createWorkspaceMutation.isLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  disabled={createWorkspaceMutation.isLoading}
+                >
+                  {createWorkspaceMutation.isLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Creating...
+                    </>
+                  ) : (
+                    "Create"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
