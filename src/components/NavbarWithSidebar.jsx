@@ -46,7 +46,7 @@ export default function NavbarWithSidebar() {
     // { name: "Users", icon: Users, href: "#users", badge: null },
     // { name: "Products", icon: ShoppingBag, href: "#products", badge: null },
     // { name: "Inbox", icon: Inbox, href: "#inbox", badge: "3" },
-    { name: "Sign In", icon: LogIn, href: "#signin", badge: null },
+    { name: "Sign In", icon: LogIn, href: "/login", badge: null },
     { name: "Sign Up", icon: UserPlus, href: "/register", badge: null }, // เปลี่ยนเป็น link ไปหน้า register
   ];
 
