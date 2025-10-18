@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logoImage from "./weme_ar_tranparent.png";
+
 import {
   Menu,
   X,
@@ -98,7 +98,7 @@ export default function NavbarWithSidebar() {
                 <Menu size={24} />
               </button>
               <button onClick={() => navigate("/")} className="focus:outline-none">
-                <img src={logoImage} alt="Logo" className="h-8 w-auto" />
+                <img src="/weme_ar_tranparent.png" alt="Logo" className="h-8 w-auto" />
               </button>
             </div>
             <div className="flex items-center gap-4">
