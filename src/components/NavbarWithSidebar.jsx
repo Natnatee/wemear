@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import logoImage from "./weme_ar_tranparent.png";
 import {
   Menu,
   X,
@@ -19,10 +20,34 @@ export default function NavbarWithSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [workspaces, setWorkspaces] = useState(workspace);
+  const [userData2, setUserData2] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is logged in
+    const userData2String = localStorage.getItem("user_data2");
+    const userDataString = localStorage.getItem("user_data");
+
+    if (userData2String) {
+      try {
+        setUserData2(JSON.parse(userData2String));
+      } catch (error) {
+        console.error("Failed to parse user_data2:", error);
+      }
+    } else if (userDataString) {
+      // Fallback to user_data if user_data2 not available
+      try {
+        const userData = JSON.parse(userDataString);
+        setUserData2({ user_name: userData.user_metadata?.user_name || userData.email });
+      } catch (error) {
+        console.error("Failed to parse user_data:", error);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
+    setUserData2(null);
     navigate("/");
   };
 
@@ -47,7 +72,7 @@ export default function NavbarWithSidebar() {
     // { name: "Products", icon: ShoppingBag, href: "#products", badge: null },
     // { name: "Inbox", icon: Inbox, href: "#inbox", badge: "3" },
     { name: "Sign In", icon: LogIn, href: "/login", badge: null },
-    { name: "Sign Up", icon: UserPlus, href: "/register", badge: null }, // เปลี่ยนเป็น link ไปหน้า register
+    { name: "Sign Up", icon: UserPlus, href: "/register", badge: null },
   ];
 
   const handleItemClick = (item) => {
@@ -72,17 +97,25 @@ export default function NavbarWithSidebar() {
               >
                 <Menu size={24} />
               </button>
-              <span className="text-xl font-semibold text-gray-800">Logo</span>
+              <button onClick={() => navigate("/")} className="focus:outline-none">
+                <img src={logoImage} alt="Logo" className="h-8 w-auto" />
+              </button>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Welcome</span>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1 px-2 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-              >
-                <LogOut size={14} />
-                Logout
-              </button>
+              {userData2 && (
+                <>
+                  <span className="text-sm text-gray-600">
+                    Welcome, {userData2.user_name}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-1 px-2 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                  >
+                    <LogOut size={14} />
+                    Logout
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
