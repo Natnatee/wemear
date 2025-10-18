@@ -27,7 +27,7 @@ const Dashboard = ({ projects }) => {
       const matchesLabel = !filters.label || project.label === filters.label;
       const matchesSearch =
         !filters.search ||
-        project.name.toLowerCase().includes(filters.search.toLowerCase());
+        project.project_name.toLowerCase().includes(filters.search.toLowerCase());
       return (
         matchesOwner &&
         matchesTool &&
@@ -38,9 +38,9 @@ const Dashboard = ({ projects }) => {
     })
     .sort((a, b) => {
       if (filters.date === "Newest Created")
-        return new Date(b.date) - new Date(a.date);
+        return new Date(b.created_at) - new Date(a.created_at);
       if (filters.date === "Older Created")
-        return new Date(a.date) - new Date(b.date);
+        return new Date(a.created_at) - new Date(b.created_at);
       return 0;
     });
 
@@ -146,8 +146,8 @@ const Dashboard = ({ projects }) => {
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredProjects.map((project, index) => (
-          <CardProject key={index} project={project} />
+        {filteredProjects.map((project) => (
+          <CardProject key={project.project_id} project={project} />
         ))}
       </div>
 

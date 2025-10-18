@@ -8,14 +8,24 @@ const CardProject = ({ project }) => {
     navigate(`/project/${project.project_id}`);
   };
 
+  // Format date from ISO string to readable format
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
     <div
       className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow relative cursor-pointer"
       onClick={handleClick}
     >
       <img
-        src={project.image}
-        alt={project.name}
+        src={project.project_image}
+        alt={project.project_name}
         className="w-full h-48 object-cover"
       />
       <img
@@ -44,7 +54,7 @@ const CardProject = ({ project }) => {
                 }
               />
             </svg>
-            <span className="text-sm text-gray-700">{project.name}</span>
+            <span className="text-sm text-gray-700">{project.project_name}</span>
           </div>
           <div>
             {project.owner}
@@ -52,7 +62,7 @@ const CardProject = ({ project }) => {
         </div>
 
         <p className="text-sm text-gray-500 mt-1">
-          Created {project.date} | {project.status}
+          Created {formatDate(project.created_at)} | {project.status}
         </p>
       </div>
     </div>

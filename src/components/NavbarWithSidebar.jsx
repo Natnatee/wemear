@@ -318,29 +318,31 @@ export default function NavbarWithSidebar() {
                   >
                     <FolderPlus size={18} className="text-gray-500 flex-shrink-0" />
                     <span className="text-gray-700 flex-1">{ws.workspace_name}</span>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditWorkspace(ws);
-                        }}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Edit workspace"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteWorkspace(ws.workspace_id, ws.workspace_name);
-                        }}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Delete workspace"
-                        disabled={deleteWorkspaceMutation.isLoading}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    {ws.user_id !== "global" && (
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditWorkspace(ws);
+                          }}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          title="Edit workspace"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteWorkspace(ws.workspace_id, ws.workspace_name);
+                          }}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Delete workspace"
+                          disabled={deleteWorkspaceMutation.isLoading}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 <button
