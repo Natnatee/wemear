@@ -13,20 +13,27 @@ import {
   Plus,
   FolderPlus,
   LogOut,
+  Trash2,
+  Edit,
 } from "lucide-react";
-import { useWorkspaces, useCreateWorkspace } from "../hook/useWorkspace";
+import { useWorkspaces, useCreateWorkspace, useDeleteWorkspace, useUpdateWorkspace } from "../hook/useWorkspace";
 
 export default function NavbarWithSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [workspaceName, setWorkspaceName] = useState("");
+  const [editingWorkspace, setEditingWorkspace] = useState(null);
+  const [editWorkspaceName, setEditWorkspaceName] = useState("");
   const [userData2, setUserData2] = useState(null);
   const navigate = useNavigate();
 
   // React Query hooks
   const { data: workspaces = [], isLoading, refetch } = useWorkspaces();
   const createWorkspaceMutation = useCreateWorkspace();
+  const deleteWorkspaceMutation = useDeleteWorkspace();
+  const updateWorkspaceMutation = useUpdateWorkspace();
 
   useEffect(() => {
     // Check if user is logged in
@@ -87,6 +94,52 @@ export default function NavbarWithSidebar() {
     } catch (error) {
       console.error("Failed to create workspace:", error);
       alert("Failed to create workspace. Please try again.");
+    }
+  };
+
+  const handleEditWorkspace = (workspace) => {
+    setEditingWorkspace(workspace);
+    setEditWorkspaceName(workspace.workspace_name);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateWorkspace = async (e) => {
+    e.preventDefault();
+
+    if (!editWorkspaceName.trim()) {
+      return;
+    }
+
+    try {
+      await updateWorkspaceMutation.mutateAsync({
+        workspaceId: editingWorkspace.workspace_id,
+        workspaceName: editWorkspaceName,
+      });
+
+      // Wait for refetch to complete
+      await refetch();
+
+      // Close modal and reset form
+      setEditingWorkspace(null);
+      setEditWorkspaceName("");
+      setShowEditModal(false);
+    } catch (error) {
+      console.error("Failed to update workspace:", error);
+      alert("Failed to update workspace. Please try again.");
+    }
+  };
+
+  const handleDeleteWorkspace = async (workspaceId, workspaceName) => {
+    if (!confirm(`Are you sure you want to delete "${workspaceName}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteWorkspaceMutation.mutateAsync(workspaceId);
+      // Query will automatically refetch after successful delete
+    } catch (error) {
+      console.error("Failed to delete workspace:", error);
+      alert("Failed to delete workspace. Please try again.");
     }
   };
 
@@ -152,13 +205,14 @@ export default function NavbarWithSidebar() {
       <div className="h-12"></div>
 
       {/* Backdrop */}
-      {(isSidebarOpen || activeModal || showCreateModal) && (
+      {(isSidebarOpen || activeModal || showCreateModal || showEditModal) && (
         <div
           className="fixed inset-0 bg-gray-900/30 z-40 transition-opacity"
           onClick={() => {
             setIsSidebarOpen(false);
             setActiveModal(null);
             setShowCreateModal(false);
+            setShowEditModal(false);
           }}
         />
       )}
@@ -260,10 +314,33 @@ export default function NavbarWithSidebar() {
                 {workspaces.map((ws) => (
                   <div
                     key={ws.workspace_id}
-                    className="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                    className="flex items-center gap-2 p-3 hover:bg-gray-50 rounded-lg transition-colors group"
                   >
-                    <FolderPlus size={18} className="text-gray-500 mr-3" />
-                    <span className="text-gray-700">{ws.workspace_name}</span>
+                    <FolderPlus size={18} className="text-gray-500 flex-shrink-0" />
+                    <span className="text-gray-700 flex-1">{ws.workspace_name}</span>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditWorkspace(ws);
+                        }}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="Edit workspace"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteWorkspace(ws.workspace_id, ws.workspace_name);
+                        }}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Delete workspace"
+                        disabled={deleteWorkspaceMutation.isLoading}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 ))}
                 <button
@@ -360,6 +437,97 @@ export default function NavbarWithSidebar() {
                     </>
                   ) : (
                     "Create"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Workspace Modal - Center Screen */}
+      {showEditModal && editingWorkspace && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-100 w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h5 className="text-lg font-semibold text-gray-900">
+                Edit Workspace
+              </h5>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingWorkspace(null);
+                  setEditWorkspaceName("");
+                }}
+                className="text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg p-1.5 transition-colors"
+                disabled={updateWorkspaceMutation.isLoading}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateWorkspace} className="p-6">
+              <div className="mb-4">
+                <label
+                  htmlFor="edit_workspace_name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Workspace Name
+                </label>
+                <input
+                  type="text"
+                  id="edit_workspace_name"
+                  value={editWorkspaceName}
+                  onChange={(e) => setEditWorkspaceName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter workspace name"
+                  required
+                  disabled={updateWorkspaceMutation.isLoading}
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingWorkspace(null);
+                    setEditWorkspaceName("");
+                  }}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  disabled={updateWorkspaceMutation.isLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  disabled={updateWorkspaceMutation.isLoading}
+                >
+                  {updateWorkspaceMutation.isLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Updating...
+                    </>
+                  ) : (
+                    "Update"
                   )}
                 </button>
               </div>

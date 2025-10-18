@@ -26,3 +26,44 @@ export const useCreateWorkspace = () => {
     }
   );
 };
+
+// Delete workspace
+export const useDeleteWorkspace = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    async (workspaceId) => {
+      const response = await axiosInstance.delete(
+        `/rest/v1/workspace?workspace_id=eq.${workspaceId}`
+      );
+      return response.data;
+    },
+    {
+      onSuccess: () => {
+        // Invalidate and refetch workspace query
+        queryClient.invalidateQueries("workspace");
+      },
+    }
+  );
+};
+
+// Update workspace
+export const useUpdateWorkspace = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    async ({ workspaceId, workspaceName }) => {
+      const response = await axiosInstance.patch(
+        `/rest/v1/workspace?workspace_id=eq.${workspaceId}`,
+        { workspace_name: workspaceName }
+      );
+      return response.data;
+    },
+    {
+      onSuccess: () => {
+        // Invalidate and refetch workspace query
+        queryClient.invalidateQueries("workspace");
+      },
+    }
+  );
+};
