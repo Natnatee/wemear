@@ -14,14 +14,14 @@ const Dashboard = ({ projects, workspaceName = "Projects" }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const uniqueOwners = [...new Set(projects.map((p) => p.owner))];
-  const uniqueTools = [...new Set(projects.map((p) => p.tool))];
+  const uniqueTools = [...new Set(projects.flatMap((p) => p.tool || []))];
   const uniqueStatuses = [...new Set(projects.map((p) => p.status))];
   const uniqueLabels = [...new Set(projects.map((p) => p.label))];
 
   const filteredProjects = projects
     .filter((project) => {
       const matchesOwner = !filters.owner || project.owner === filters.owner;
-      const matchesTool = !filters.tool || project.tool === filters.tool;
+      const matchesTool = !filters.tool || (project.tool && project.tool.includes(filters.tool));
       const matchesStatus =
         !filters.status || project.status === filters.status;
       const matchesLabel = !filters.label || project.label === filters.label;

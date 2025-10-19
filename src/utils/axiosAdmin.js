@@ -14,24 +14,6 @@ const axiosAdmin = axios.create({
   },
 });
 
-// Add request interceptor to check access token
-axiosAdmin.interceptors.request.use(
-  (config) => {
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      // Clear all localStorage data
-      localStorage.clear();
-      // Redirect to login page
-      window.location.href = '/login';
-      return Promise.reject(new Error('No access token found'));
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 // Add response interceptor to handle errors
 axiosAdmin.interceptors.response.use(
   (response) => {

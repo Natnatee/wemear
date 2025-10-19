@@ -15,13 +15,6 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      // Clear all localStorage data
-      localStorage.clear();
-      // Redirect to login page
-      window.location.href = '/login';
-      return Promise.reject(new Error('No access token found'));
-    }
     config.headers['Authorization'] = `Bearer ${accessToken}`;
     return config;
   },
