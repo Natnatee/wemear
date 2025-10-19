@@ -738,23 +738,15 @@ export const sampleProjects = [
     tool: ["Image Tracking", "Face Tracking", "World Tracking"],
     link: "https://example.com/project7",
     info: {
-      // ==========================================
-      // 1. SHARED ASSETS (Asset Registry)
-      // ใช้สำหรับเก็บ Source File หลัก และใช้ asset_name อ้างอิง
-      // ==========================================
       shared_assets: [],
 
       tracking_modes: {
-        // ==========================================
-        // 2. IMAGE TRACKING MODE
-        // ==========================================
         image: {
           engine: "mindar-image",
           mindFile: {
             src: "",
             image: {},
           },
-
           tracks: [
             {
               track_id: "T1",
@@ -767,10 +759,6 @@ export const sampleProjects = [
             },
           ],
         },
-
-        // ==========================================
-        // 3. FACE TRACKING MODE
-        // ==========================================
         face: {
           engine: "mindar-face",
           faceFile: { src: "" },
@@ -782,10 +770,6 @@ export const sampleProjects = [
             },
           ],
         },
-
-        // ==========================================
-        // 4. WORLD TRACKING MODE
-        // ==========================================
         world: {
           engine: "webxr-ar",
           scenes: [
