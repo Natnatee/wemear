@@ -6,8 +6,25 @@ function Home() {
   const { data: projects = [], isLoading, error } = useProjects();
 
   // Get workspace info from localStorage with state
-  const [workspaceId, setWorkspaceId] = useState(localStorage.getItem("workspace_id"));
-  const [workspaceName, setWorkspaceName] = useState(localStorage.getItem("workspace_name") || "Projects");
+  const [workspaceId, setWorkspaceId] = useState(() => {
+    const savedWorkspaceId = localStorage.getItem("workspace_id");
+    if (!savedWorkspaceId) {
+      const defaultWorkspaceId = "a7f6ae6e-9209-4b07-9c4e-a3a988213768";
+      localStorage.setItem("workspace_id", defaultWorkspaceId);
+      return defaultWorkspaceId;
+    }
+    return savedWorkspaceId;
+  });
+
+  const [workspaceName, setWorkspaceName] = useState(() => {
+    const savedWorkspaceName = localStorage.getItem("workspace_name");
+    if (!savedWorkspaceName) {
+      const defaultWorkspaceName = "Global";
+      localStorage.setItem("workspace_name", defaultWorkspaceName);
+      return defaultWorkspaceName;
+    }
+    return savedWorkspaceName;
+  });
 
   // Listen for workspace changes
   useEffect(() => {
