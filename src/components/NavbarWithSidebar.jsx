@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, LayoutDashboard, LogIn, UserPlus, LogOut } from "lucide-react";
+import { Menu, X, LayoutDashboard, LogIn, UserPlus, LogOut, FolderOpen, Image, Video, Box, Headphones, FileText } from "lucide-react";
 import Workspace from "./Workspace";
 
 export default function NavbarWithSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [show, setShow] = useState(false);
+  const [showAssetsModal, setShowAssetsModal] = useState(false);
   const [userData2, setUserData2] = useState(null);
   const navigate = useNavigate();
 
@@ -37,6 +38,7 @@ export default function NavbarWithSidebar() {
 
   const menuItems = [
     { name: "Project", icon: LayoutDashboard, type: "modal", badge: null },
+    { name: "Assets", icon: FolderOpen, type: "assets_modal", badge: null },
     { name: "Sign In", icon: LogIn, href: "/login", badge: null },
     { name: "Sign Up", icon: UserPlus, href: "/register", badge: null },
   ];
@@ -44,10 +46,20 @@ export default function NavbarWithSidebar() {
   const handleItemClick = (item) => {
     if (item.type === "modal") {
       setShow(true);
+    } else if (item.type === "assets_modal") {
+      setShowAssetsModal(true);
     } else {
       setIsSidebarOpen(false);
     }
   };
+
+  const assetsMenuItems = [
+    { name: "Image", icon: Image, href: "/assets/image" },
+    { name: "Video", icon: Video, href: "/assets/video" },
+    { name: "3D", icon: Box, href: "/assets/3d" },
+    { name: "Audio", icon: Headphones, href: "/assets/audio" },
+    { name: "Mind File", icon: FileText, href: "/assets/mindfile" },
+  ];
 
   return (
     <>
@@ -161,6 +173,59 @@ export default function NavbarWithSidebar() {
       </div>
 
       <Workspace show={show} setShow={setShow} navigate={navigate} />
+
+      {/* Assets Modal */}
+      {showAssetsModal && (
+        <div
+          className="fixed inset-0 bg-gray-900/30 z-50 transition-opacity"
+          onClick={() => setShowAssetsModal(false)}
+        >
+          <div
+            className="fixed top-16 left-4 w-64 bg-white shadow-lg rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h5 className="text-base font-semibold text-gray-700">
+                Assets
+              </h5>
+              <button
+                onClick={() => setShowAssetsModal(false)}
+                className="text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg p-1.5 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="py-2">
+              <ul className="space-y-1 px-3">
+                {assetsMenuItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.name}>
+                      <Link
+                        to={item.href}
+                        onClick={() => {
+                          setShowAssetsModal(false);
+                          setIsSidebarOpen(false);
+                        }}
+                        className="w-full flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group transition-colors text-left"
+                      >
+                        <Icon
+                          size={18}
+                          className="text-gray-500 group-hover:text-gray-900 transition-colors"
+                        />
+                        <span className="flex-1 ml-3 whitespace-nowrap text-sm">
+                          {item.name}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
