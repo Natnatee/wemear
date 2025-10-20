@@ -28,6 +28,9 @@ export default function NavbarWithSidebar() {
   const [editWorkspaceName, setEditWorkspaceName] = useState("");
   const [userData2, setUserData2] = useState(null);
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [targetWorkspace, setTargetWorkspace] = useState(null);
 
   // React Query hooks
   const { data: workspaces = [], isLoading, refetch } = useWorkspaces();
@@ -129,18 +132,11 @@ export default function NavbarWithSidebar() {
     }
   };
 
-  const handleDeleteWorkspace = async (workspaceId, workspaceName) => {
-    if (!confirm(`Are you sure you want to delete "${workspaceName}"?`)) {
-      return;
-    }
-
-    try {
-      await deleteWorkspaceMutation.mutateAsync(workspaceId);
-      // Query will automatically refetch after successful delete
-    } catch (error) {
-      console.error("Failed to delete workspace:", error);
-      alert("Failed to delete workspace. Please try again.");
-    }
+  const confirmDelete = async () => {
+    await deleteWorkspaceMutation.mutateAsync(targetWorkspace.id);
+    setShowModal(false);
+    setConfirmText("");
+    setTargetWorkspace(null);
   };
 
   const handleWorkspaceClick = (workspace) => {
@@ -353,7 +349,8 @@ export default function NavbarWithSidebar() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteWorkspace(ws.workspace_id, ws.workspace_name);
+                            setTargetWorkspace({ id: ws.workspace_id, name: ws.workspace_name });
+                            setShowModal(true);
                           }}
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
                           title="Delete workspace"
@@ -361,6 +358,7 @@ export default function NavbarWithSidebar() {
                         >
                           <Trash2 size={16} />
                         </button>
+
                       </div>
                     )}
                   </div>
@@ -463,6 +461,46 @@ export default function NavbarWithSidebar() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Delet confirmDelete*/}
+      {showModal && targetWorkspace && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-2">
+              Delete “{targetWorkspace.name}”?
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              พิมพ์ <strong>delete</strong> เพื่อยืนยันการลบ
+            </p>
+
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              className="w-full border rounded px-3 py-2 mb-4"
+              placeholder="พิมพ์ delete ที่นี่"
+            />
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-100"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={confirmText.trim().toLowerCase() !== "delete"}
+                className={`px-3 py-1.5 rounded text-white ${confirmText.trim().toLowerCase() === "delete"
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-red-300 cursor-not-allowed"
+                  }`}
+              >
+                ลบจริง
+              </button>
+            </div>
           </div>
         </div>
       )}
