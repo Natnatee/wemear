@@ -329,9 +329,9 @@ export default function ThreeDAssets() {
     }
 
     return (
-      <div className="w-full h-full relative">
+      <div className="w-full h-full relative flex items-center justify-center bg-gray-50">
         {isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mb-2"></div>
             <span className="text-xs text-gray-500">Loading...</span>
           </div>
@@ -340,10 +340,10 @@ export default function ThreeDAssets() {
           ref={canvasRef}
           width={200}
           height={200}
-          className="w-full h-full"
+          className="max-w-full max-h-full"
           style={{ display: isLoading ? 'none' : 'block' }}
         />
-        <div className="absolute bottom-2 left-2">
+        <div className="absolute bottom-2 left-2 z-10">
           <span className="text-xs font-bold text-white bg-green-600 bg-opacity-80 px-2 py-1 rounded">
             {getModelType(modelName)}
           </span>
@@ -487,7 +487,7 @@ export default function ThreeDAssets() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {models.map((model) => (
                   <div key={model.id} className="group relative">
-                    <div className="aspect-square bg-white rounded-lg overflow-hidden relative border">
+                    <div className="aspect-square bg-white rounded-lg overflow-hidden relative border z-0">
                       <ModelCanvas
                         modelUrl={getThreeDUrl(model.name)}
                         modelName={model.name}
@@ -495,7 +495,7 @@ export default function ThreeDAssets() {
                       />
 
                       {/* 3D overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                         <div className="p-2 bg-white bg-opacity-90 rounded-full">
                           <Box size={16} className="text-gray-700" />
                         </div>
