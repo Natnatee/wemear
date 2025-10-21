@@ -1,27 +1,108 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Box, Upload, Download, FileText, Trash2 } from "lucide-react";
 import NavbarWithSidebar from "../../components/NavbarWithSidebar";
 import { useThreeDAssets, useUploadThreeD, useDeleteThreeD, getThreeDUrl } from "../../hook/useThreeDAssets";
 import { useDropzone } from "react-dropzone";
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
 export default function ThreeDAssets() {
   const [selectedModel, setSelectedModel] = useState(null);
   const [fileName, setFileName] = useState("");
   const [draggedFile, setDraggedFile] = useState(null);
+  const [previewThumbnail, setPreviewThumbnail] = useState(null);
 
   const { data: models, isLoading, error } = useThreeDAssets();
   const uploadMutation = useUploadThreeD();
   const deleteMutation = useDeleteThreeD();
 
+  // Generate 3D preview
+  const generate3DPreview = useCallback(async (file) => {
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    if (!['gltf', 'glb', 'obj'].includes(fileExtension)) {
+      setPreviewThumbnail(null);
+      return;
+    }
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 200;
+      canvas.height = 200;
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xffffff);
+
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(200, 200);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 5, 5);
+      scene.add(directionalLight);
+
+      const fileUrl = URL.createObjectURL(file);
+      let model = null;
+
+      if (fileExtension === 'gltf' || fileExtension === 'glb') {
+        const loader = new GLTFLoader();
+        const gltf = await new Promise((resolve, reject) => {
+          loader.load(fileUrl, resolve, undefined, reject);
+        });
+        model = gltf.scene;
+      } else if (fileExtension === 'obj') {
+        const loader = new OBJLoader();
+        model = await new Promise((resolve, reject) => {
+          loader.load(fileUrl, resolve, undefined, reject);
+        });
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshLambertMaterial({ color: 0x888888 });
+          }
+        });
+      }
+
+      if (model) {
+        scene.add(model);
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        model.position.sub(center);
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 1.5 / maxDim;
+        model.scale.setScalar(scale);
+
+        camera.position.set(2, 1, 2);
+        camera.lookAt(0, 0, 0);
+
+        // Render single frame only
+        renderer.render(scene, camera);
+
+        const thumbnail = canvas.toDataURL('image/png');
+        setPreviewThumbnail(thumbnail);
+      }
+
+      URL.revokeObjectURL(fileUrl);
+      renderer.dispose();
+    } catch (error) {
+      console.error('Error generating 3D preview:', error);
+      setPreviewThumbnail(null);
+    }
+  }, []);
+
   // Drag and drop functionality
-  const onDrop = useCallback((acceptedFiles) => {
+  const onDrop = useCallback(async (acceptedFiles) => {
     const file = acceptedFiles[0];
     if (file) {
       setDraggedFile(file);
       setSelectedModel(URL.createObjectURL(file));
       setFileName(file.name);
+      await generate3DPreview(file);
     }
-  }, []);
+  }, [generate3DPreview]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -67,6 +148,7 @@ export default function ThreeDAssets() {
       setDraggedFile(null);
       setSelectedModel(null);
       setFileName("");
+      setPreviewThumbnail(null);
       alert("อัพโหลดสำเร็จ!");
     } catch (error) {
       console.error("Upload error:", error);
@@ -118,6 +200,158 @@ export default function ThreeDAssets() {
     return typeMap[ext] || '3D';
   };
 
+  // 3D Canvas Component for each model
+  const ModelCanvas = ({ modelUrl, modelName, canvasId }) => {
+    const canvasRef = useRef(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+      if (!modelUrl || !canvasRef.current) return;
+
+      const canvas = canvasRef.current;
+      const fileExtension = modelName.split('.').pop().toLowerCase();
+
+      // Only render supported formats
+      if (!['gltf', 'glb', 'obj'].includes(fileExtension)) {
+        setError(true);
+        setIsLoading(false);
+        return;
+      }
+
+      let mounted = true;
+
+      const loadModel = async () => {
+        try {
+          // Create scene
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color(0xffffff);
+
+          const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+          const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true,
+            alpha: true,
+            preserveDrawingBuffer: true
+          });
+
+          renderer.setSize(200, 200);
+          renderer.shadowMap.enabled = true;
+
+          // Lighting
+          const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+          scene.add(ambientLight);
+
+          const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+          directionalLight.position.set(5, 5, 5);
+          scene.add(directionalLight);
+
+          // Load model
+          let model = null;
+
+          if (fileExtension === 'gltf' || fileExtension === 'glb') {
+            const loader = new GLTFLoader();
+            const gltf = await new Promise((resolve, reject) => {
+              loader.load(modelUrl, resolve, undefined, reject);
+            });
+            model = gltf.scene;
+          } else if (fileExtension === 'obj') {
+            const loader = new OBJLoader();
+            model = await new Promise((resolve, reject) => {
+              loader.load(modelUrl, resolve, undefined, reject);
+            });
+
+            model.traverse((child) => {
+              if (child.isMesh) {
+                child.material = new THREE.MeshLambertMaterial({ color: 0x888888 });
+              }
+            });
+          }
+
+          if (!mounted) return;
+
+          if (model) {
+            scene.add(model);
+
+            // Center and scale model
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+
+            model.position.sub(center);
+
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scale = 1.5 / maxDim;
+            model.scale.setScalar(scale);
+
+            // Position camera
+            camera.position.set(2, 1, 2);
+            camera.lookAt(0, 0, 0);
+
+            // Render single frame only
+            renderer.render(scene, camera);
+
+            if (mounted) {
+              setIsLoading(false);
+            }
+          }
+
+          // Cleanup function
+          return () => {
+            renderer.dispose();
+          };
+
+        } catch (err) {
+          console.error('Error loading 3D model:', err);
+          if (mounted) {
+            setError(true);
+            setIsLoading(false);
+          }
+        }
+      };
+
+      loadModel();
+
+      return () => {
+        mounted = false;
+      };
+    }, [modelUrl, modelName]);
+
+    if (error || !['gltf', 'glb', 'obj'].includes(modelName.split('.').pop().toLowerCase())) {
+      return (
+        <div className="w-full h-full flex flex-col items-center justify-center">
+          <Box size={32} className="text-gray-400 mb-2" />
+          <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">
+            {getModelType(modelName)}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-full h-full relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mb-2"></div>
+            <span className="text-xs text-gray-500">Loading...</span>
+          </div>
+        )}
+        <canvas
+          ref={canvasRef}
+          width={200}
+          height={200}
+          className="w-full h-full"
+          style={{ display: isLoading ? 'none' : 'block' }}
+        />
+        <div className="absolute bottom-2 left-2">
+          <span className="text-xs font-bold text-white bg-green-600 bg-opacity-80 px-2 py-1 rounded">
+            {getModelType(modelName)}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <NavbarWithSidebar />
@@ -150,8 +384,18 @@ export default function ThreeDAssets() {
                 <input {...getInputProps()} />
                 {selectedModel ? (
                   <div className="space-y-4">
-                    <div className="w-48 h-48 mx-auto flex items-center justify-center bg-gray-100 rounded-lg border">
-                      <Box size={48} className="text-gray-400" />
+                    <div className="w-48 h-48 mx-auto rounded-lg border bg-gray-900 overflow-hidden">
+                      {previewThumbnail ? (
+                        <img
+                          src={previewThumbnail}
+                          alt="3D Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Box size={48} className="text-gray-400" />
+                        </div>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">
@@ -243,14 +487,12 @@ export default function ThreeDAssets() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {models.map((model) => (
                   <div key={model.id} className="group relative">
-                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative border-2 border-dashed border-gray-200">
-                      {/* Simple 3D representation */}
-                      <div className="w-full h-full flex flex-col items-center justify-center p-4">
-                        <Box size={48} className="text-gray-400 mb-2" />
-                        <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">
-                          {getModelType(model.name)}
-                        </span>
-                      </div>
+                    <div className="aspect-square bg-white rounded-lg overflow-hidden relative border">
+                      <ModelCanvas
+                        modelUrl={getThreeDUrl(model.name)}
+                        modelName={model.name}
+                        canvasId={`canvas-${model.id}`}
+                      />
 
                       {/* 3D overlay */}
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity">
