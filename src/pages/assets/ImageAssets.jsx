@@ -3,7 +3,6 @@ import { Image, Upload, Download, Scissors, FileText, Trash2 } from "lucide-reac
 import NavbarWithSidebar from "../../components/NavbarWithSidebar";
 import { useImageAssets, useUploadImage, useDeleteImage, getImageUrl } from "../../hook/useImageAssets";
 import { useDropzone } from "react-dropzone";
-import { v4 as uuidv4 } from "uuid";
 
 export default function ImageAssets() {
   const [selectedImage, setSelectedImage] = useState(null);
