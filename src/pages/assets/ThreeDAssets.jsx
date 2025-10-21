@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, memo } from "react";
 import { Box, Upload, Download, FileText, Trash2 } from "lucide-react";
 import NavbarWithSidebar from "../../components/NavbarWithSidebar";
 import { useThreeDAssets, useUploadThreeD, useDeleteThreeD, getThreeDUrl } from "../../hook/useThreeDAssets";
@@ -12,6 +12,7 @@ export default function ThreeDAssets() {
   const [fileName, setFileName] = useState("");
   const [draggedFile, setDraggedFile] = useState(null);
   const [previewThumbnail, setPreviewThumbnail] = useState(null);
+  const [thumbnails, setThumbnails] = useState({});
 
   const { data: models, isLoading, error } = useThreeDAssets();
   const uploadMutation = useUploadThreeD();
@@ -93,6 +94,79 @@ export default function ThreeDAssets() {
     }
   }, []);
 
+  const generateThumbnailFromUrl = useCallback(async (url, fileExtension) => {
+    if (!['gltf', 'glb', 'obj'].includes(fileExtension)) {
+      return null;
+    }
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 200;
+      canvas.height = 200;
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xffffff);
+
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(200, 200);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 5, 5);
+      scene.add(directionalLight);
+
+      let model = null;
+
+      if (fileExtension === 'gltf' || fileExtension === 'glb') {
+        const loader = new GLTFLoader();
+        const gltf = await new Promise((resolve, reject) => {
+          loader.load(url, resolve, undefined, reject);
+        });
+        model = gltf.scene;
+      } else if (fileExtension === 'obj') {
+        const loader = new OBJLoader();
+        model = await new Promise((resolve, reject) => {
+          loader.load(url, resolve, undefined, reject);
+        });
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshLambertMaterial({ color: 0x888888 });
+          }
+        });
+      }
+
+      if (model) {
+        scene.add(model);
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        model.position.sub(center);
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 1.5 / maxDim;
+        model.scale.setScalar(scale);
+
+        camera.position.set(2, 1, 2);
+        camera.lookAt(0, 0, 0);
+
+        // Render single frame only
+        renderer.render(scene, camera);
+
+        const thumbnail = canvas.toDataURL('image/png');
+        renderer.dispose();
+        return thumbnail;
+      }
+
+      renderer.dispose();
+      return null;
+    } catch (error) {
+      console.error('Error generating 3D preview:', error);
+      return null;
+    }
+  }, []);
+
   // Drag and drop functionality
   const onDrop = useCallback(async (acceptedFiles) => {
     const file = acceptedFiles[0];
@@ -161,7 +235,7 @@ export default function ThreeDAssets() {
   };
 
   // Handle download
-  const handleDownload = (modelName) => {
+  const handleDownload = useCallback((modelName) => {
     const url = getThreeDUrl(modelName);
     const link = document.createElement('a');
     link.href = url;
@@ -169,10 +243,10 @@ export default function ThreeDAssets() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, [getThreeDUrl]);
 
   // Handle delete
-  const handleDelete = async (modelName) => {
+  const handleDelete = useCallback(async (modelName) => {
     if (window.confirm(`คุณต้องการลบ ${modelName} ใช่หรือไม่?`)) {
       try {
         await deleteMutation.mutateAsync(modelName);
@@ -182,7 +256,7 @@ export default function ThreeDAssets() {
         alert("เกิดข้อผิดพลาดในการลบไฟล์");
       }
     }
-  };
+  }, [deleteMutation]);
 
   // Get model type from file extension
   const getModelType = (fileName) => {
@@ -200,157 +274,134 @@ export default function ThreeDAssets() {
     return typeMap[ext] || '3D';
   };
 
-  // 3D Canvas Component for each model
-  const ModelCanvas = ({ modelUrl, modelName, canvasId }) => {
-    const canvasRef = useRef(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(false);
 
-    useEffect(() => {
-      if (!modelUrl || !canvasRef.current) return;
 
-      const canvas = canvasRef.current;
-      const fileExtension = modelName.split('.').pop().toLowerCase();
+  useEffect(() => {
+    const generateAllThumbnails = async () => {
+      if (!models || models.length === 0) return;
 
-      // Only render supported formats
-      if (!['gltf', 'glb', 'obj'].includes(fileExtension)) {
-        setError(true);
-        setIsLoading(false);
-        return;
+      const newThumbnails = { ...thumbnails };
+      const toGenerate = [];
+
+      for (const model of models) {
+        if (newThumbnails[model.id] !== undefined) continue;
+
+        const ext = model.name.split('.').pop().toLowerCase();
+        if (['gltf', 'glb', 'obj'].includes(ext)) {
+          toGenerate.push({ model, ext });
+          newThumbnails[model.id] = null; // placeholder for loading
+        } else {
+          newThumbnails[model.id] = null;
+        }
       }
 
-      let mounted = true;
+      setThumbnails(newThumbnails);
 
-      const loadModel = async () => {
-        try {
-          // Create scene
-          const scene = new THREE.Scene();
-          scene.background = new THREE.Color(0xffffff);
-
-          const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
-          const renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            antialias: true,
-            alpha: true,
-            preserveDrawingBuffer: true
-          });
-
-          renderer.setSize(200, 200);
-          renderer.shadowMap.enabled = true;
-
-          // Lighting
-          const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-          scene.add(ambientLight);
-
-          const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-          directionalLight.position.set(5, 5, 5);
-          scene.add(directionalLight);
-
-          // Load model
-          let model = null;
-
-          if (fileExtension === 'gltf' || fileExtension === 'glb') {
-            const loader = new GLTFLoader();
-            const gltf = await new Promise((resolve, reject) => {
-              loader.load(modelUrl, resolve, undefined, reject);
-            });
-            model = gltf.scene;
-          } else if (fileExtension === 'obj') {
-            const loader = new OBJLoader();
-            model = await new Promise((resolve, reject) => {
-              loader.load(modelUrl, resolve, undefined, reject);
-            });
-
-            model.traverse((child) => {
-              if (child.isMesh) {
-                child.material = new THREE.MeshLambertMaterial({ color: 0x888888 });
-              }
-            });
+      // Generate in parallel for better perf
+      await Promise.all(
+        toGenerate.map(async ({ model, ext }) => {
+          try {
+            const url = getThreeDUrl(model.name);
+            const thumbnail = await generateThumbnailFromUrl(url, ext);
+            setThumbnails(prev => ({ ...prev, [model.id]: thumbnail }));
+          } catch (err) {
+            setThumbnails(prev => ({ ...prev, [model.id]: null }));
           }
-
-          if (!mounted) return;
-
-          if (model) {
-            scene.add(model);
-
-            // Center and scale model
-            const box = new THREE.Box3().setFromObject(model);
-            const center = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
-
-            model.position.sub(center);
-
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const scale = 1.5 / maxDim;
-            model.scale.setScalar(scale);
-
-            // Position camera
-            camera.position.set(2, 1, 2);
-            camera.lookAt(0, 0, 0);
-
-            // Render single frame only
-            renderer.render(scene, camera);
-
-            if (mounted) {
-              setIsLoading(false);
-            }
-          }
-
-          // Cleanup function
-          return () => {
-            renderer.dispose();
-          };
-
-        } catch (err) {
-          console.error('Error loading 3D model:', err);
-          if (mounted) {
-            setError(true);
-            setIsLoading(false);
-          }
-        }
-      };
-
-      loadModel();
-
-      return () => {
-        mounted = false;
-      };
-    }, [modelUrl, modelName]);
-
-    if (error || !['gltf', 'glb', 'obj'].includes(modelName.split('.').pop().toLowerCase())) {
-      return (
-        <div className="w-full h-full flex flex-col items-center justify-center">
-          <Box size={32} className="text-gray-400 mb-2" />
-          <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">
-            {getModelType(modelName)}
-          </span>
-        </div>
+        })
       );
-    }
+    };
 
+    generateAllThumbnails();
+  }, [models, getThreeDUrl, generateThumbnailFromUrl]);
+
+  // ModelItem component with memoization
+  const ModelItem = memo(({ model, getThreeDUrl, handleDownload, handleDelete, deleteMutationIsLoading }) => {
     return (
-      <div className="w-full h-full relative flex items-center justify-center bg-gray-50">
-        {isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mb-2"></div>
-            <span className="text-xs text-gray-500">Loading...</span>
+      <div className="group relative">
+        <div className="aspect-square bg-white rounded-lg overflow-hidden relative border z-0">
+          {(() => {
+            const ext = model.name.split('.').pop().toLowerCase();
+            const isSupported = ['gltf', 'glb', 'obj'].includes(ext);
+            const thumbnail = thumbnails[model.id];
+
+            if (!isSupported || thumbnail === null) {
+              return (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
+                  <Box size={32} className="text-gray-400 mb-2" />
+                  <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">
+                    {getModelType(model.name)}
+                  </span>
+                </div>
+              );
+            }
+
+            if (thumbnail && thumbnail !== null) {
+              return (
+                <div className="w-full h-full relative">
+                  <img
+                    src={thumbnail}
+                    alt={model.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-2 left-2 z-10">
+                    <span className="text-xs font-bold text-white bg-green-600 bg-opacity-80 px-2 py-1 rounded">
+                      {getModelType(model.name)}
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            // Loading for supported
+            return (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mb-2"></div>
+                <span className="text-xs text-gray-500">Loading...</span>
+              </div>
+            );
+          })()}
+
+          {/* 3D overlay */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+            <div className="p-2 bg-white bg-opacity-90 rounded-full">
+              <Box size={16} className="text-gray-700" />
+            </div>
           </div>
-        )}
-        <canvas
-          ref={canvasRef}
-          width={200}
-          height={200}
-          className="max-w-full max-h-full"
-          style={{ display: isLoading ? 'none' : 'block' }}
-        />
-        <div className="absolute bottom-2 left-2 z-10">
-          <span className="text-xs font-bold text-white bg-green-600 bg-opacity-80 px-2 py-1 rounded">
-            {getModelType(modelName)}
-          </span>
+        </div>
+
+        {/* Model Info */}
+        <div className="mt-2">
+          <p className="text-xs text-gray-600 truncate" title={model.name}>
+            {model.name}
+          </p>
+          <p className="text-xs text-gray-400">
+            {model.metadata?.size ? (model.metadata.size / (1024 * 1024)).toFixed(1) + ' MB' : 'N/A'}
+          </p>
+        </div>
+
+        {/* Action Buttons (Show on Hover) */}
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1">
+            <button
+              onClick={() => handleDownload(model.name)}
+              className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              title="ดาวน์โหลด"
+            >
+              <Download size={12} />
+            </button>
+            <button
+              onClick={() => handleDelete(model.name)}
+              className="p-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              title="ลบ"
+              disabled={deleteMutationIsLoading}
+            >
+              <Trash2 size={12} />
+            </button>
+          </div>
         </div>
       </div>
     );
-  };
+  });
 
   return (
     <>
@@ -486,53 +537,14 @@ export default function ThreeDAssets() {
             ) : models && models.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {models.map((model) => (
-                  <div key={model.id} className="group relative">
-                    <div className="aspect-square bg-white rounded-lg overflow-hidden relative border z-0">
-                      <ModelCanvas
-                        modelUrl={getThreeDUrl(model.name)}
-                        modelName={model.name}
-                        canvasId={`canvas-${model.id}`}
-                      />
-
-                      {/* 3D overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <div className="p-2 bg-white bg-opacity-90 rounded-full">
-                          <Box size={16} className="text-gray-700" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Model Info */}
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-600 truncate" title={model.name}>
-                        {model.name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {model.metadata?.size ? (model.metadata.size / (1024 * 1024)).toFixed(1) + ' MB' : 'N/A'}
-                      </p>
-                    </div>
-
-                    {/* Action Buttons (Show on Hover) */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleDownload(model.name)}
-                          className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                          title="ดาวน์โหลด"
-                        >
-                          <Download size={12} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(model.name)}
-                          className="p-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                          title="ลบ"
-                          disabled={deleteMutation.isLoading}
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <ModelItem
+                    key={model.id}
+                    model={model}
+                    getThreeDUrl={getThreeDUrl}
+                    handleDownload={handleDownload}
+                    handleDelete={handleDelete}
+                    deleteMutationIsLoading={deleteMutation.isLoading}
+                  />
                 ))}
               </div>
             ) : (
