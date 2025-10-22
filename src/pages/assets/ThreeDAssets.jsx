@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect, memo } from "react";
+import React, { useState, useCallback, useEffect, memo } from "react";
 import { Box, Upload, Download, FileText, Trash2 } from "lucide-react";
 import NavbarWithSidebar from "../../components/NavbarWithSidebar";
 import { useThreeDAssets, useUploadThreeD, useDeleteThreeD, getThreeDUrl } from "../../hook/useThreeDAssets";
@@ -304,7 +304,8 @@ export default function ThreeDAssets() {
             const url = getThreeDUrl(model.name);
             const thumbnail = await generateThumbnailFromUrl(url, ext);
             setThumbnails(prev => ({ ...prev, [model.id]: thumbnail }));
-          } catch (err) {
+          } catch (e) {
+            console.log(`Error generating thumbnail for ${model.name}: ${e}`);
             setThumbnails(prev => ({ ...prev, [model.id]: null }));
           }
         })
@@ -315,7 +316,7 @@ export default function ThreeDAssets() {
   }, [models, getThreeDUrl, generateThumbnailFromUrl]);
 
   // ModelItem component with memoization
-  const ModelItem = memo(({ model, getThreeDUrl, handleDownload, handleDelete, deleteMutationIsLoading }) => {
+  const ModelItem = memo(({ model, handleDownload, handleDelete, deleteMutationIsLoading }) => {
     return (
       <div className="group relative">
         <div className="aspect-square bg-white rounded-lg overflow-hidden relative border z-0">

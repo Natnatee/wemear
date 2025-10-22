@@ -67,8 +67,10 @@ export const make_project = {
       image: {
         engine: "mindar-image",
         mindFile: {
-          src: "https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/assets/final_2.mind",
-          image: {
+          mind_id: "a7f6ae6e-9209-4b07-9c4e-a3a988213768",
+          mind_name: "MindAR",
+          mind_src: "https://msdwbkeszkklbelimvaw.supabase.co/storage/v1/object/assets/final_2.mind",
+          mind_image: {
             // Target Images สำหรับ Mind File ยังต้องใช้ src ดั้งเดิม
             T1: "/target_image_mindfile/1.jpg",
             T2: "/target_image_mindfile/2.jpg",
