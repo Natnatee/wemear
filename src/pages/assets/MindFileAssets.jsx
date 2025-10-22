@@ -17,6 +17,7 @@ export default function MindFileAssets() {
   const [mindName, setMindName] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
+  const [isUploadingLocal, setIsUploadingLocal] = useState(false);
 
   const compilerRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -55,6 +56,7 @@ export default function MindFileAssets() {
       setCompiledData(null);
       setPreviewImages([]);
       setProgress("");
+      setIsUploadingLocal(false);
       resetUpload();
     }
   }, [uploadSuccess, resetUpload]);
@@ -63,6 +65,7 @@ export default function MindFileAssets() {
   useEffect(() => {
     if (uploadError) {
       alert("เกิดข้อผิดพลาดในการอัพโหลด: " + uploadError.message);
+      setIsUploadingLocal(false);
     }
   }, [uploadError]);
 
@@ -253,6 +256,7 @@ export default function MindFileAssets() {
       return;
     }
 
+    setIsUploadingLocal(true);
     uploadMind({
       mindName: mindName.trim(),
       images: files,
@@ -431,11 +435,11 @@ export default function MindFileAssets() {
 
                   <button
                     onClick={handleUpload}
-                    disabled={!compiledData || !mindName.trim() || isUploading}
+                    disabled={!compiledData || !mindName.trim() || isUploadingLocal}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
                   >
                     <Send size={18} />
-                    {isUploading ? "กำลังอัพโหลด..." : "Upload"}
+                    {isUploadingLocal ? "Uploading" : "Upload"}
                   </button>
                 </div>
               </div>
