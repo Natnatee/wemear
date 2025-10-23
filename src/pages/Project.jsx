@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
-import SceneCard from "../components/SceneCard";
 import QRCodeGenerator from "../components/QRCodeGenerator";
 import ModalImageUpdate from "../components/ModalImageUpdate";
+import SceneImageCards from "../components/SceneImageCards";
 import projectStore from "../utils/projectStore.js";
 import axiosInstance from "../utils/axios";
+
 
 function Project() {
   const { id } = useParams();
@@ -106,31 +107,7 @@ function Project() {
     setTimeout(() => setShowSaveIndicator(false), 2000);
   };
 
-  // memoize derived array เพื่อไม่คำนวณซ้ำบ่อย ๆ
-  const sceneCards = useMemo(() => {
-    // A. ตรวจสอบ State
-    if (!project) return [];
 
-    // B. นำตรรกะคำนวณจาก sceneImageProject ใน Store มาใส่
-    const imageMode = project.info?.tracking_modes?.image;
-    if (!imageMode) return [];
-
-    const mindImages = imageMode.mindFile?.image || {};
-
-    // C. คำนวณและคืนค่า Array
-    return (imageMode.tracks || []).flatMap((track) => {
-      const trackId = track.track_id;
-      const imgsrc = mindImages[trackId] ?? "/default_asset_image/image.png";
-      const scenes = track.scenes || [];
-      return scenes.map((scene) => ({
-        type: "image",
-        imgsrc,
-        scene_id: `IMAGE_${trackId}${scene.scene_id}`, // IMAGE_T1S1
-        track_id: trackId,
-        scene_key: scene.scene_id,
-      }));
-    });
-  }, [project]); // 4. Dependency คือ 'project' เท่านั้น
 
   // Loading state
   if (isLoading) {
@@ -275,8 +252,8 @@ function Project() {
                     <span className="font-medium text-gray-700">สถานะ:</span>
                     <span
                       className={`ml-2 px-2 py-1 rounded text-sm ${project.status === "Published"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
                         }`}
                     >
                       {project.status}
@@ -291,18 +268,7 @@ function Project() {
             </div>
           </div>
 
-          {/* ส่วน - แสดง Scene CardImage */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4">
-              Scenes (Image Tracking)
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {sceneCards.map((card) => (
-                <SceneCard key={card.scene_id} card={card} />
-              ))}
-            </div>
-          </div>
+          <SceneImageCards project={project} />
 
           {/* ส่วน QR Code */}
           <div className="bg-white rounded-lg shadow-md p-8">
