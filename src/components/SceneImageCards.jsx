@@ -44,6 +44,18 @@ function SceneImageCards({ project }) {
     const selectedMind = mindImages.find((mind) => mind.mind_name === mindName);
 
     if (selectedMind && project) {
+      // สร้าง tracks อัตโนมัติจาก mind_image keys (T1, T2, T3, T4)
+      const trackIds = Object.keys(selectedMind.mind_image || {});
+      const tracks = trackIds.map((trackId) => ({
+        track_id: trackId,
+        scenes: [
+          {
+            scene_id: "S1",
+            assets: [],
+          },
+        ],
+      }));
+
       // อัพเดท project state ในส่วน image tracking
       const updatedProject = {
         ...project,
@@ -59,6 +71,7 @@ function SceneImageCards({ project }) {
                 mind_src: selectedMind.mind_src,
                 mind_image: selectedMind.mind_image,
               },
+              tracks: tracks,
             },
           },
         },
