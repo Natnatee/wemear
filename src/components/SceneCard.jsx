@@ -39,21 +39,26 @@ const SceneCard = ({ card }) => {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
           {/* backdrop */}
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0"
             onClick={() => setOpen(false)}
           />
 
-          {/* modal */}
-          <div className="relative bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-auto z-10">
-            <img
-              src={card.imgsrc}
-              alt={card.scene_id}
-              className="w-full h-auto object-contain rounded-t-lg bg-black"
-            />
-            <div className="p-4">
+          {/* modal - ใช้ flex column เพื่อจัดเรียงรูปและข้อมูล */}
+          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-4 py-6 sm:px-8 sm:py-8">
+            {/* container สำหรับรูป - ใช้พื้นที่ 70% ของความสูง */}
+            <div className="flex items-center justify-center w-full max-h-[70vh] mb-4">
+              <img
+                src={card.imgsrc}
+                alt={card.scene_id}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+
+            {/* ข้อมูลและปุ่ม - พื้นหลังขาว */}
+            <div className="bg-white rounded-lg p-4 shadow-lg max-w-2xl w-full mx-4">
               <div className="text-lg font-semibold">{card.scene_id}</div>
               <div className="mt-2 text-sm text-gray-600">
                 Track: {card.track_id} · Scene: {card.scene_key}
