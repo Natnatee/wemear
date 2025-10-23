@@ -1,8 +1,21 @@
-import { useMutation } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import axiosAdmin from "../utils/axiosAdmin";
 import axiosInstance from "../utils/axios";
 
+// Query สำหรับดึงข้อมูล mind_image
+export const useMindImages = () => {
+  return useQuery({
+    queryKey: ["mindImage"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/rest/v1/mind_image");
+      return response.data || [];
+    },
+  });
+};
+
 const useMind = () => {
+  const queryClient = useQueryClient();
+
   // Upload images to Supabase Storage
   const uploadImages = async ({ mindName, images }) => {
     const uploadPromises = images.map(async (image, index) => {
@@ -88,6 +101,10 @@ const useMind = () => {
         mindFileResponse,
         tableResponse,
       };
+    },
+    onSuccess: () => {
+      // Invalidate mindImage cache เมื่อ upload สำเร็จ
+      queryClient.invalidateQueries(["mindImage"]);
     },
   });
 

@@ -1,32 +1,14 @@
 import { useMemo, useState, useEffect } from "react";
-import axiosInstance from "../utils/axios";
 import SceneCard from "./SceneCard";
 import projectStore from "../utils/projectStore";
+import { useMindImages } from "../hook/useMind";
 
 function SceneImageCards({ project }) {
-  const [mindImages, setMindImages] = useState([]);
   const [selectedMindName, setSelectedMindName] = useState("");
-  const [loading, setLoading] = useState(false);
   const { setProject } = projectStore();
 
-  // ดึงข้อมูล mind_image จาก API
-  useEffect(() => {
-    const fetchMindImages = async () => {
-      setLoading(true);
-      try {
-        const response = await axiosInstance.get(
-          "/rest/v1/mind_image"
-        );
-        setMindImages(response.data || []);
-      } catch (error) {
-        console.error("Error fetching mind images:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMindImages();
-  }, []);
+  // ดึงข้อมูล mind_image จาก React Query
+  const { data: mindImages = [], isLoading: loading } = useMindImages();
 
   // ตั้งค่า selected mind name จาก project ที่มีอยู่
   useEffect(() => {
