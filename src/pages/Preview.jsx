@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect, useState, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
+import { useLocation } from "react-router-dom";
 import SceneImage from "../components/SceneImage";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
 import ToolScene from "../components/ToolScene";
@@ -9,6 +10,8 @@ function Preview() {
   const projectState = projectStore((state) => state.project);
   const [scene_image_select, setscene_image_select] = useState([]);
   const [currentScene, setCurrentScene] = useState(null);
+  const location = useLocation();
+  const { trackId, sceneKey } = location.state || {};
   const track = useMemo(() => {
     const sharedAssets = projectState.info.shared_assets;
     const imageTrackingMode = projectState.info.tracking_modes.image;
@@ -36,13 +39,19 @@ function Preview() {
 
   useEffect(() => {
     if (track) {
-      const firstSceneKey = Object.keys(track)[0];
-      if (firstSceneKey) {
-        setscene_image_select(track[firstSceneKey]);
-        setCurrentScene(firstSceneKey);
+      let initialSceneKey = null;
+      if (trackId && sceneKey) {
+        initialSceneKey = `IMAGE_${trackId}${sceneKey}`;
+      } else {
+        initialSceneKey = Object.keys(track)[0];
+      }
+
+      if (initialSceneKey && track[initialSceneKey]) {
+        setscene_image_select(track[initialSceneKey]);
+        setCurrentScene(initialSceneKey);
       }
     }
-  }, [track]);
+  }, [track, trackId, sceneKey]);
 
   const handleSceneChange = (sceneKey) => {
     if (track && track[sceneKey]) {
