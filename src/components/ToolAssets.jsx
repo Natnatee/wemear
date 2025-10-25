@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useImageAssets, getImageUrl } from "../hook/useImageAssets";
+import { useNavigate } from "react-router-dom";
 
 const ToolAssets = ({ currentState }) => {
   const [selectedAssetType, setSelectedAssetType] = useState(null); // เริ่มต้นยังไม่โดนกด
   const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
 
   // call the image assets hook at top-level (hooks must not be conditional)
   const {
@@ -65,7 +67,9 @@ const ToolAssets = ({ currentState }) => {
           className="absolute inset-0 bg-black opacity-40"
           onClick={onClose}
         />
-        <div className="relative bg-white rounded-lg shadow-xl w-11/12 max-w-md p-6">
+        <div
+          className="relative bg-white rounded-lg shadow-xl w-11/12 max-w-3xl max-h-[90vh] p-6 flex flex-col"
+        >
           {children}
         </div>
       </div>,
@@ -101,17 +105,26 @@ const ToolAssets = ({ currentState }) => {
       <Modal open={showModal} onClose={closeModal}>
         <div className="flex justify-between items-center mb-4">
           <h4 className="text-lg font-semibold">{selectedAssetType || ""}</h4>
-          <button
-            onClick={closeModal}
-            className="ml-4 bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"
-            aria-label="Close modal"
-          >
-            ปิด
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => navigate("/assets/ImageAssets")}
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+              aria-label="Add new asset"
+            >
+              Add
+            </button>
+            <button
+              onClick={closeModal}
+              className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"
+              aria-label="Close modal"
+            >
+              ปิด
+            </button>
+          </div>
         </div>
 
         {selectedAssetType === "Image" && imageAssetsData && (
-          <div className="grid grid-cols-3 gap-4 max-h-80 overflow-y-auto">
+          <div className="grid grid-cols-4 gap-4 overflow-y-auto flex-grow">
             {imageAssetsData.map((image) => (
               <div
                 key={image.id}
@@ -128,10 +141,6 @@ const ToolAssets = ({ currentState }) => {
             ))}
           </div>
         )}
-        {/* เนื้อหา modal ว่างไว้ รอใส่เนื้อหา */}
-        {/* <div className="min-h-[120px] flex items-center justify-center text-gray-400">
-          empty placeholder
-        </div> */}
       </Modal>
     </div>
   );
