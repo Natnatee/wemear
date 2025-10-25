@@ -86,7 +86,7 @@ function Preview() {
           </Suspense>
         </Canvas>
       </div>
-      <ToolAssets />
+      <ToolAssets currentState={currentScene} />
       <ToolScene
         scenes={scenes}
         handleSceneChange={handleSceneChange}
