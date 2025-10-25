@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useImageAssets } from "../hook/useImageAssets";
 
 const ToolAssets = ({ currentState }) => {
   const [selectedAssetType, setSelectedAssetType] = useState(null); // เริ่มต้นยังไม่โดนกด
   const [showModal, setShowModal] = useState(false);
+
+  // call the image assets hook at top-level (hooks must not be conditional)
+  const {
+    data: imageAssetsData,
+    isLoading: imageLoading,
+    error: imageError,
+  } = useImageAssets();
 
   const buttonClasses = (type) =>
     `px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ` +
@@ -16,6 +24,14 @@ const ToolAssets = ({ currentState }) => {
     setShowModal(true); // เปิด modal เมื่อกดปุ่ม
     console.log("Selected Asset Type:", type);
     console.log("Current State:", currentState);
+
+    // If user clicked Image, log image assets from hook (hook is called at top-level)
+    if (type === "Image") {
+      // imageAssetsData comes from useImageAssets
+      console.log("Image assets loading:", imageLoading);
+      console.log("Image assets data:", imageAssetsData);
+      if (imageError) console.error("Image assets error:", imageError);
+    }
   };
 
   const closeModal = () => {
