@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useImageAssets, getImageUrl } from "../hook/useImageAssets";
 import { useNavigate } from "react-router-dom";
+import projectStore from "../utils/projectStore";
 
 const ToolAssets = ({ currentState }) => {
   const [selectedAssetType, setSelectedAssetType] = useState(null); // เริ่มต้นยังไม่โดนกด
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+  const addAsset = projectStore((state) => state.addAssetToScene);
 
   // call the image assets hook at top-level (hooks must not be conditional)
   const {
@@ -129,7 +131,10 @@ const ToolAssets = ({ currentState }) => {
               <div
                 key={image.id}
                 className="cursor-pointer p-2 border rounded-lg hover:shadow-md transition-shadow"
-                onClick={() => console.log("Selected Image:", image)}
+                onClick={() => {
+                  console.log("Selected Image:", image);
+                  addAsset(image, currentState, getImageUrl);
+                }}
               >
                 <img
                   src={getImageUrl(image.name)}
