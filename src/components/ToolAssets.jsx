@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useImageAssets } from "../hook/useImageAssets";
+import { useImageAssets, getImageUrl } from "../hook/useImageAssets";
 
 const ToolAssets = ({ currentState }) => {
   const [selectedAssetType, setSelectedAssetType] = useState(null); // เริ่มต้นยังไม่โดนกด
@@ -110,10 +110,28 @@ const ToolAssets = ({ currentState }) => {
           </button>
         </div>
 
+        {selectedAssetType === "Image" && imageAssetsData && (
+          <div className="grid grid-cols-3 gap-4 max-h-80 overflow-y-auto">
+            {imageAssetsData.map((image) => (
+              <div
+                key={image.id}
+                className="cursor-pointer p-2 border rounded-lg hover:shadow-md transition-shadow"
+                onClick={() => console.log("Selected Image:", image)}
+              >
+                <img
+                  src={getImageUrl(image.name)}
+                  alt={image.name}
+                  className="w-full h-20 object-cover rounded-md mb-2"
+                />
+                <p className="text-xs text-gray-600 truncate">{image.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
         {/* เนื้อหา modal ว่างไว้ รอใส่เนื้อหา */}
-        <div className="min-h-[120px] flex items-center justify-center text-gray-400">
-          {/* empty placeholder */}
-        </div>
+        {/* <div className="min-h-[120px] flex items-center justify-center text-gray-400">
+          empty placeholder
+        </div> */}
       </Modal>
     </div>
   );
