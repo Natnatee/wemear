@@ -46,10 +46,8 @@ const generateNewAssetId = (info) => {
     }
   }
 
-  // Collect asset IDs from shared_assets
-  if (info.shared_assets) {
-    info.shared_assets.forEach(asset => allAssetIds.add(asset.asset_id));
-  }
+  // ลบส่วนที่เกี่ยวข้องกับ shared_assets
+  // ไม่จำเป็นต้องเก็บ asset IDs จาก shared_assets อีกต่อไป
 
   let newId = 1;
   while (allAssetIds.has(`asset_${newId}`)) {
@@ -111,7 +109,7 @@ const projectStore = create((set, get) => ({
     }
   },
 
-  addAssetToScene: (assetData, currentState, getImageUrlFunc) => {
+  addAssetToScene: (assetData, currentState) => {
     set((state) => {
       const currentProject = state.project;
       if (!currentProject) {
@@ -167,11 +165,14 @@ const projectStore = create((set, get) => ({
       const newAssetId = generateNewAssetId(updatedProject.info);
       const newAssetForScene = {
         asset_id: newAssetId,
-        asset_name: assetData.name, // ลบ 'I' ออกตามคำขอ
+        asset_name: assetData.name,
         scale: [0.5, 0.5, 0.5],
         opacity: 1,
         position: [0, 0, 0],
         rotation: [0, 0, 0],
+        // เพิ่ม src และ type โดยตรงในแต่ละ asset แทนการใช้ shared_assets
+        src: assetData.src || `/assets/${assetData.name}`,
+        type: "Image" // Fixed for image type
       };
 
       // Ensure assets array exists for the scene
@@ -180,19 +181,8 @@ const projectStore = create((set, get) => ({
       }
       targetScene.assets.push(newAssetForScene);
 
-      // Create shared asset object
-      const sharedAsset = {
-        asset_name: assetData.name,
-        asset_image: "/default_asset_image/image.png", // Fixed for image type
-        src: getImageUrlFunc(assetData.name),
-        type: "Image", // Fixed for image type
-      };
-
-      // Add to shared_assets in info regardless of tracking type
-      if (!updatedProject.info.shared_assets) {
-        updatedProject.info.shared_assets = [];
-      }
-      updatedProject.info.shared_assets.push(sharedAsset);
+      // ลบส่วนที่เกี่ยวข้องกับ shared_assets
+      // ไม่ต้องเพิ่ม asset ใน shared_assets อีกต่อไป
 
       debouncedSave(updatedProject);
       return { project: updatedProject };

@@ -23,7 +23,7 @@ function Preview() {
       return {}; // คืนค่า Object เปล่า เพื่อไม่ให้โค้ดส่วนล่าง Crash
     }
 
-    const sharedAssets = projectState.info.shared_assets || []; // ตั้งเป็น Array เปล่าถ้าไม่มี
+    // const sharedAssets = projectState.info.shared_assets || []; // ไม่ใช้แล้ว เพราะเปลี่ยนโครงสร้างข้อมูล
     const imageTrackingMode = projectState.info.tracking_modes.image;
 
     const transformedScenes = {};
@@ -37,13 +37,11 @@ function Preview() {
         const assetsToMap = scene.assets || [];
 
         transformedScenes[sceneKey] = assetsToMap.map((asset) => {
-          const sharedAsset = sharedAssets.find(
-            (sa) => sa.asset_name === asset.asset_name
-          );
+          // ไม่ต้องค้นหาใน shared_assets แล้ว เพราะ src และ type อยู่ใน asset โดยตรง
           return {
             ...asset,
-            src: sharedAsset?.src || "", // ใช้ Optional Chaining
-            type: sharedAsset?.type || "", // ใช้ Optional Chaining
+            src: asset.src || "", // ใช้ src จาก asset โดยตรง
+            type: asset.type || "", // ใช้ type จาก asset โดยตรง
           };
         });
       });

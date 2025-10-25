@@ -133,7 +133,12 @@ const ToolAssets = ({ currentState }) => {
                 className="cursor-pointer p-2 border rounded-lg hover:shadow-md transition-shadow"
                 onClick={() => {
                   console.log("Selected Image:", image);
-                  addAsset(image, currentState, getImageUrl);
+                  // เพิ่ม src โดยตรงใน image object
+                  const assetData = {
+                    ...image,
+                    src: getImageUrl(image.name)
+                  };
+                  addAsset(assetData, currentState);
                 }}
               >
                 <img
