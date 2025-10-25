@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const SceneCard = ({ card }) => {
+const CardSceneImage = ({ card }) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -92,4 +92,4 @@ const SceneCard = ({ card }) => {
   );
 };
 
-export default SceneCard;
+export default CardSceneImage;

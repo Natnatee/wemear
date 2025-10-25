@@ -1,10 +1,10 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import SceneCard from "./SceneCard";
+import CardSceneImage from "./CardSceneImage";
 import projectStore from "../utils/projectStore";
 import { useMindImages } from "../hook/useMind";
 
-function SceneImageCards({ project }) {
+function SectionSceneImage({ project }) {
   const [selectedMindName, setSelectedMindName] = useState("");
   const [showTrackSelector, setShowTrackSelector] = useState(false);
   const { setProject } = projectStore();
@@ -228,7 +228,7 @@ function SceneImageCards({ project }) {
 
           {/* แสดง Scene Cards ที่มีอยู่ (สูงสุด 7 cards เพราะตำแหน่งแรกเป็นปุ่ม +) */}
           {sceneCards.slice(0, 7).map((card) => (
-            <SceneCard key={card.scene_id} card={card} />
+            <CardSceneImage key={card.scene_id} card={card} />
           ))}
         </div>
       </div>
@@ -244,4 +244,4 @@ function SceneImageCards({ project }) {
   );
 }
 
-export default SceneImageCards;
+export default SectionSceneImage;

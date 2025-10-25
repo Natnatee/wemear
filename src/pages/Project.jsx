@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
 import QRCodeGenerator from "../components/QRCodeGenerator";
 import ModalImageUpdate from "../components/ModalImageUpdate";
-import SceneImageCards from "../components/SceneImageCards";
+import SectionSceneImage from "../components/SectionSceneImage";
 import projectStore from "../utils/projectStore.js";
 import axiosInstance from "../utils/axios";
 
@@ -268,7 +268,7 @@ function Project() {
             </div>
           </div>
 
-          <SceneImageCards project={project} />
+          <SectionSceneImage project={project} />
 
           {/* ส่วน QR Code */}
           <div className="bg-white rounded-lg shadow-md p-8">
