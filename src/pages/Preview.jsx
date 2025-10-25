@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import SceneImage from "../components/SceneImage";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
 import ToolScene from "../components/ToolScene";
+import ToolAssets from "../components/ToolAssets";
 import projectStore from "../utils/projectStore.js";
 
 function Preview() {
@@ -85,6 +86,7 @@ function Preview() {
           </Suspense>
         </Canvas>
       </div>
+      <ToolAssets />
       <ToolScene
         scenes={scenes}
         handleSceneChange={handleSceneChange}
