@@ -69,7 +69,9 @@ const CardSceneImage = ({ card }) => {
                   type="button"
                   onClick={() => {
                     setOpen(false);
-                    navigate("/preview", { state: { trackId: card.track_id, sceneKey: card.scene_key } });
+                    const currentStateValue = `IMAGE_${card.track_id}${card.scene_key}`;
+                    localStorage.setItem('CurrentState', currentStateValue);
+                    navigate("/preview");
                   }}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >

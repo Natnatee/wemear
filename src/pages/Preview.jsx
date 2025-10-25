@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { useLocation } from "react-router-dom";
+// import { useLocation } from "react-router-dom"; // ไม่ใช้แล้ว
 import SceneImage from "../components/SceneImage";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
 import ToolScene from "../components/ToolScene";
@@ -12,8 +12,8 @@ function Preview() {
   const [scene_image_select, setscene_image_select] = useState([]);
   const [currentScene, setCurrentScene] = useState(null);
   console.log("currentScene", currentScene);
-  const location = useLocation();
-  const { trackId, sceneKey } = location.state || {};
+  // const location = useLocation(); // ไม่ใช้แล้ว
+  // const { trackId, sceneKey } = location.state || {}; // ไม่ใช้แล้ว
   const track = useMemo(() => {
     // ************************************************
     // ✅ จุดแก้ไขหลัก: เพิ่มการตรวจสอบความปลอดภัยของ projectState
@@ -53,25 +53,25 @@ function Preview() {
   console.log(track);
 
   useEffect(() => {
-    if (track) {
-      let initialSceneKey = null;
-      if (trackId && sceneKey) {
-        initialSceneKey = `IMAGE_${trackId}${sceneKey}`;
-      } else {
+    if (track && currentScene) { // ลบเงื่อนไข currentScene === null ออก
+      setscene_image_select(track[currentScene]);
+    } else if (track && Object.keys(track).length > 0) { // กรณีที่ currentScene ยังเป็น null หรือไม่มีค่า ให้ตั้งค่าเริ่มต้น
+      let initialSceneKey = localStorage.getItem('CurrentState');
+      if (!initialSceneKey) {
         initialSceneKey = Object.keys(track)[0];
       }
-
       if (initialSceneKey && track[initialSceneKey]) {
         setscene_image_select(track[initialSceneKey]);
         setCurrentScene(initialSceneKey);
       }
     }
-  }, [track, trackId, sceneKey]);
+  }, [track, currentScene]); // ลบ trackId, sceneKey ออกจาก dependency array
 
   const handleSceneChange = (sceneKey) => {
     if (track && track[sceneKey]) {
       setscene_image_select(track[sceneKey]);
       setCurrentScene(sceneKey);
+      localStorage.setItem('CurrentState', sceneKey); // เพิ่มบรรทัดนี้เพื่อบันทึกใน localStorage
     }
   };
 
