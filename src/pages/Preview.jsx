@@ -11,25 +11,39 @@ function Preview() {
   const projectState = projectStore((state) => state.project);
   const [scene_image_select, setscene_image_select] = useState([]);
   const [currentScene, setCurrentScene] = useState(null);
+  console.log("currentScene", currentScene);
   const location = useLocation();
   const { trackId, sceneKey } = location.state || {};
   const track = useMemo(() => {
-    const sharedAssets = projectState.info.shared_assets;
+    // ************************************************
+    // ✅ จุดแก้ไขหลัก: เพิ่มการตรวจสอบความปลอดภัยของ projectState
+    // ป้องกันการ CRASH เมื่อ projectState.info หรือ projectState.info.tracking_modes เป็น undefined
+    // ************************************************
+    if (!projectState || !projectState.info?.tracking_modes?.image) {
+      return {}; // คืนค่า Object เปล่า เพื่อไม่ให้โค้ดส่วนล่าง Crash
+    }
+
+    const sharedAssets = projectState.info.shared_assets || []; // ตั้งเป็น Array เปล่าถ้าไม่มี
     const imageTrackingMode = projectState.info.tracking_modes.image;
 
     const transformedScenes = {};
 
-    imageTrackingMode.tracks.forEach((trackItem) => {
-      trackItem.scenes.forEach((scene) => {
+    // ใช้ Optional Chaining (?.) สำหรับการวนซ้ำเพื่อความปลอดภัย
+    imageTrackingMode.tracks?.forEach((trackItem) => {
+      trackItem.scenes?.forEach((scene) => {
         const sceneKey = `IMAGE_${trackItem.track_id}${scene.scene_id}`;
-        transformedScenes[sceneKey] = scene.assets.map((asset) => {
+
+        // ใช้ Array เปล่าแทน scene.assets ที่อาจเป็น undefined
+        const assetsToMap = scene.assets || [];
+
+        transformedScenes[sceneKey] = assetsToMap.map((asset) => {
           const sharedAsset = sharedAssets.find(
             (sa) => sa.asset_name === asset.asset_name
           );
           return {
             ...asset,
-            src: sharedAsset ? sharedAsset.src : "",
-            type: sharedAsset ? sharedAsset.type : "",
+            src: sharedAsset?.src || "", // ใช้ Optional Chaining
+            type: sharedAsset?.type || "", // ใช้ Optional Chaining
           };
         });
       });
