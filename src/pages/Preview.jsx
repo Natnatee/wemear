@@ -5,8 +5,10 @@ import NavbarWithSidebar from "../components/NavbarWithSidebar";
 import ToolScene from "../components/ToolScene";
 import projectStore from "../utils/projectStore.js";
 
-function Preview2() {
+function Preview() {
   const projectState = projectStore((state) => state.project);
+  const [scene_image_select, setscene_image_select] = useState([]);
+  const [currentScene, setCurrentScene] = useState(null);
   const track = useMemo(() => {
     const sharedAssets = projectState.info.shared_assets;
     const imageTrackingMode = projectState.info.tracking_modes.image;
@@ -29,15 +31,8 @@ function Preview2() {
       });
     });
     return transformedScenes;
-  }, []);
+  }, [projectState]);
   console.log(track);
-
-  return <Preview track={track} />;
-}
-
-function Preview({ track }) {
-  const [scene_image_select, setscene_image_select] = useState([]);
-  const [currentScene, setCurrentScene] = useState(null);
 
   useEffect(() => {
     if (track) {
@@ -81,9 +76,13 @@ function Preview({ track }) {
           </Suspense>
         </Canvas>
       </div>
-      <ToolScene scenes={scenes} handleSceneChange={handleSceneChange} currentScene={currentScene} />
+      <ToolScene
+        scenes={scenes}
+        handleSceneChange={handleSceneChange}
+        currentScene={currentScene}
+      />
     </>
   );
 }
 
-export default Preview2;
+export default Preview;
