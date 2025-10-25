@@ -69,7 +69,7 @@ const SceneCard = ({ card }) => {
                   type="button"
                   onClick={() => {
                     setOpen(false);
-                    navigate("/preview");
+                    navigate("/preview", { state: { trackId: card.track_id, sceneKey: card.scene_key } });
                   }}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >

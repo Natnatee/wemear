@@ -1,35 +1,49 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import { useLocation } from "react-router-dom";
 import SceneImage from "../components/SceneImage";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
-import { make_mind_ar } from "../make_data/make_mind_ar_3.js";
+import projectStore from "../utils/projectStore";
 
-function Preview2() {
-  const track = make_mind_ar[0].image_tracking.track4.scene;
-  console.log(track);
 
-  return (
-    <Preview track={track} />
-  );
-}
 
-function Preview({ track }) {
+function Preview() {
+  const location = useLocation();
+  const { trackId, sceneKey } = location.state || {};
+  const { project } = projectStore();
+
   const [scene_image_select, setscene_image_select] = useState([]);
-
+  console.log(trackId, sceneKey);
   useEffect(() => {
-    if (track && track.scene_1) {
-      setscene_image_select(track.scene_1);
+    if (project && trackId && sceneKey) {
+      const trackData = project.image_tracking[trackId];
+      if (trackData && trackData.scene[sceneKey]) {
+        setscene_image_select(trackData.scene[sceneKey]);
+      }
+    } else if (project && project.image_tracking) {
+      // Fallback to the first available scene if no specific scene is provided
+      const firstTrackKey = Object.keys(project.image_tracking)[0];
+      if (firstTrackKey) {
+        const firstTrack = project.image_tracking[firstTrackKey];
+        const firstSceneKey = Object.keys(firstTrack.scene)[0];
+        if (firstSceneKey) {
+          setscene_image_select(firstTrack.scene[firstSceneKey]);
+        }
+      }
     }
-  }, [track]);
+  }, [project, trackId, sceneKey]);
 
-  const handleSceneChange = (sceneKey) => {
-    if (track && track[sceneKey]) {
-      setscene_image_select(track[sceneKey]);
+  const handleSceneChange = (newSceneKey) => {
+    if (project && trackId) {
+      const trackData = project.image_tracking[trackId];
+      if (trackData && trackData.scene[newSceneKey]) {
+        setscene_image_select(trackData.scene[newSceneKey]);
+      }
     }
   };
 
-  const scenes = track
-    ? Object.keys(track).filter((key) => key.startsWith("scene_"))
+  const scenes = project && trackId && project.image_tracking[trackId]
+    ? Object.keys(project.image_tracking[trackId].scene).filter((key) => key.startsWith("scene_"))
     : [];
 
   return (
@@ -64,10 +78,10 @@ function Preview({ track }) {
           gap: "10px",
         }}
       >
-        {scenes.map((sceneKey) => (
+        {scenes.map((newSceneKey) => (
           <button
-            key={sceneKey}
-            onClick={() => handleSceneChange(sceneKey)}
+            key={newSceneKey}
+            onClick={() => handleSceneChange(newSceneKey)}
             style={{
               padding: "10px 20px",
               backgroundColor: "#007bff",
@@ -77,7 +91,7 @@ function Preview({ track }) {
               cursor: "pointer",
             }}
           >
-            {sceneKey.replace("_", " ").toUpperCase()}
+            {newSceneKey.replace("_", " ").toUpperCase()}
           </button>
         ))}
       </div>
@@ -85,4 +99,5 @@ function Preview({ track }) {
   );
 }
 
-export default Preview2;
+
+export default Preview;
