@@ -2,13 +2,14 @@ import React, { Suspense, useEffect, useState, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import SceneImage from "../components/SceneImage";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
-import { make_project } from "../make_data/make_project.js";
 import ToolScene from "../components/ToolScene";
+import projectStore from "../utils/projectStore.js";
 
 function Preview2() {
+  const projectState = projectStore((state) => state.project);
   const track = useMemo(() => {
-    const sharedAssets = make_project.info.shared_assets;
-    const imageTrackingMode = make_project.info.tracking_modes.image;
+    const sharedAssets = projectState.info.shared_assets;
+    const imageTrackingMode = projectState.info.tracking_modes.image;
 
     const transformedScenes = {};
 
