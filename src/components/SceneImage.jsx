@@ -11,7 +11,7 @@ extend({ VideoTexture });
 
 function SceneImage({scene}) {
   const { scene: threeScene } = useThree();
-
+  console.log(scene)
   // ตั้งค่าแสงเหมือนใน modelViewer.js
   const lights = useMemo(() => {
     const ambientLight = new THREE.AmbientLight(0xfff5cc, 2);

@@ -1,11 +1,31 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import SceneImage from "../components/SceneImage";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
-import { make_mind_ar } from "../make_data/make_mind_ar_3.js";
+import { make_project } from "../make_data/make_project.js";
 
 function Preview2() {
-  const track = make_mind_ar[0].image_tracking.track4.scene;
+  const track = useMemo(() => {
+    const sharedAssets = make_project.info.shared_assets;
+    const imageTrackingMode = make_project.info.tracking_modes.image;
+
+    const transformedScenes = {};
+
+    imageTrackingMode.tracks.forEach(trackItem => {
+      trackItem.scenes.forEach(scene => {
+        const sceneKey = `IMAGE_${trackItem.track_id}${scene.scene_id}`;
+        transformedScenes[sceneKey] = scene.assets.map(asset => {
+          const sharedAsset = sharedAssets.find(sa => sa.asset_name === asset.asset_name);
+          return {
+            ...asset,
+            src: sharedAsset ? sharedAsset.src : '',
+            type: sharedAsset ? sharedAsset.type : '',
+          };
+        });
+      });
+    });
+    return transformedScenes;
+  }, []);
   console.log(track);
 
   return (
@@ -17,8 +37,11 @@ function Preview({ track }) {
   const [scene_image_select, setscene_image_select] = useState([]);
 
   useEffect(() => {
-    if (track && track.scene_1) {
-      setscene_image_select(track.scene_1);
+    if (track) {
+      const firstSceneKey = Object.keys(track)[0];
+      if (firstSceneKey) {
+        setscene_image_select(track[firstSceneKey]);
+      }
     }
   }, [track]);
 
@@ -29,7 +52,7 @@ function Preview({ track }) {
   };
 
   const scenes = track
-    ? Object.keys(track).filter((key) => key.startsWith("scene_"))
+    ? Object.keys(track).filter((key) => key.startsWith("IMAGE_"))
     : [];
 
   return (
@@ -77,7 +100,7 @@ function Preview({ track }) {
               cursor: "pointer",
             }}
           >
-            {sceneKey.replace("_", " ").toUpperCase()}
+            {sceneKey.replace("IMAGE_", "").replace("S", " Scene ").replace("T", " Track ")}
           </button>
         ))}
       </div>
