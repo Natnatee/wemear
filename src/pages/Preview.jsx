@@ -3,6 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import SceneImage from "../components/SceneImage";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
 import { make_project } from "../make_data/make_project.js";
+import ToolScene from "../components/ToolScene";
 
 function Preview2() {
   const track = useMemo(() => {
@@ -11,15 +12,17 @@ function Preview2() {
 
     const transformedScenes = {};
 
-    imageTrackingMode.tracks.forEach(trackItem => {
-      trackItem.scenes.forEach(scene => {
+    imageTrackingMode.tracks.forEach((trackItem) => {
+      trackItem.scenes.forEach((scene) => {
         const sceneKey = `IMAGE_${trackItem.track_id}${scene.scene_id}`;
-        transformedScenes[sceneKey] = scene.assets.map(asset => {
-          const sharedAsset = sharedAssets.find(sa => sa.asset_name === asset.asset_name);
+        transformedScenes[sceneKey] = scene.assets.map((asset) => {
+          const sharedAsset = sharedAssets.find(
+            (sa) => sa.asset_name === asset.asset_name
+          );
           return {
             ...asset,
-            src: sharedAsset ? sharedAsset.src : '',
-            type: sharedAsset ? sharedAsset.type : '',
+            src: sharedAsset ? sharedAsset.src : "",
+            type: sharedAsset ? sharedAsset.type : "",
           };
         });
       });
@@ -28,19 +31,19 @@ function Preview2() {
   }, []);
   console.log(track);
 
-  return (
-    <Preview track={track} />
-  );
+  return <Preview track={track} />;
 }
 
 function Preview({ track }) {
   const [scene_image_select, setscene_image_select] = useState([]);
+  const [currentScene, setCurrentScene] = useState(null);
 
   useEffect(() => {
     if (track) {
       const firstSceneKey = Object.keys(track)[0];
       if (firstSceneKey) {
         setscene_image_select(track[firstSceneKey]);
+        setCurrentScene(firstSceneKey);
       }
     }
   }, [track]);
@@ -48,6 +51,7 @@ function Preview({ track }) {
   const handleSceneChange = (sceneKey) => {
     if (track && track[sceneKey]) {
       setscene_image_select(track[sceneKey]);
+      setCurrentScene(sceneKey);
     }
   };
 
@@ -76,34 +80,7 @@ function Preview({ track }) {
           </Suspense>
         </Canvas>
       </div>
-      <div
-        style={{
-          position: "absolute",
-          bottom: "20px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 1000,
-          display: "flex",
-          gap: "10px",
-        }}
-      >
-        {scenes.map((sceneKey) => (
-          <button
-            key={sceneKey}
-            onClick={() => handleSceneChange(sceneKey)}
-            style={{
-              padding: "10px 20px",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
-            {sceneKey.replace("IMAGE_", "").replace("S", " Scene ").replace("T", " Track ")}
-          </button>
-        ))}
-      </div>
+      <ToolScene scenes={scenes} handleSceneChange={handleSceneChange} currentScene={currentScene} />
     </>
   );
 }
