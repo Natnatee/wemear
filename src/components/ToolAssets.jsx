@@ -256,7 +256,15 @@ const ToolAssets = ({ currentState }) => {
           <h4 className="text-lg font-semibold">{selectedAssetType || ""}</h4>
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => navigate("/assets/image")}
+              onClick={() => {
+                if (selectedAssetType === "Image") {
+                  navigate("/assets/image");
+                } else if (selectedAssetType === "Video") {
+                  navigate("/assets/video");
+                } else if (selectedAssetType === "3D") {
+                  navigate("/assets/3d");
+                }
+              }}
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
               aria-label="Add new asset"
             >
