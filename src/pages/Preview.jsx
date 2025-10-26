@@ -9,11 +9,20 @@ import projectStore from "../utils/projectStore.js";
 
 function Preview() {
   const projectState = projectStore((state) => state.project);
+  const loadProjectFromStorage = projectStore(
+    (state) => state.loadProjectFromStorage
+  );
   const [scene_image_select, setscene_image_select] = useState([]);
   const [currentScene, setCurrentScene] = useState(null);
-  console.log("currentScene", currentScene);
   // const location = useLocation(); // ไม่ใช้แล้ว
   // const { trackId, sceneKey } = location.state || {}; // ไม่ใช้แล้ว
+
+  // โหลด project จาก localStorage เมื่อ component mount
+  useEffect(() => {
+    if (!projectState) {
+      loadProjectFromStorage();
+    }
+  }, [projectState, loadProjectFromStorage]);
   const track = useMemo(() => {
     // ************************************************
     // ✅ จุดแก้ไขหลัก: เพิ่มการตรวจสอบความปลอดภัยของ projectState
@@ -51,10 +60,12 @@ function Preview() {
   console.log(track);
 
   useEffect(() => {
-    if (track && currentScene) { // ลบเงื่อนไข currentScene === null ออก
+    if (track && currentScene) {
+      // ลบเงื่อนไข currentScene === null ออก
       setscene_image_select(track[currentScene]);
-    } else if (track && Object.keys(track).length > 0) { // กรณีที่ currentScene ยังเป็น null หรือไม่มีค่า ให้ตั้งค่าเริ่มต้น
-      let initialSceneKey = localStorage.getItem('CurrentState');
+    } else if (track && Object.keys(track).length > 0) {
+      // กรณีที่ currentScene ยังเป็น null หรือไม่มีค่า ให้ตั้งค่าเริ่มต้น
+      let initialSceneKey = localStorage.getItem("CurrentState");
       if (!initialSceneKey) {
         initialSceneKey = Object.keys(track)[0];
       }
@@ -65,11 +76,13 @@ function Preview() {
     }
   }, [track, currentScene]); // ลบ trackId, sceneKey ออกจาก dependency array
 
+  console.log("currentScene", currentScene);
+  console.log("projectState", projectState);
   const handleSceneChange = (sceneKey) => {
     if (track && track[sceneKey]) {
       setscene_image_select(track[sceneKey]);
       setCurrentScene(sceneKey);
-      localStorage.setItem('CurrentState', sceneKey); // เพิ่มบรรทัดนี้เพื่อบันทึกใน localStorage
+      localStorage.setItem("CurrentState", sceneKey); // เพิ่มบรรทัดนี้เพื่อบันทึกใน localStorage
     }
   };
 
