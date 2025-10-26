@@ -172,7 +172,8 @@ function Model3D({ safe }) {
   return (
     <primitive
       object={model}
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
         console.log("Clicked 3D Model:", safe);
         setCurrentAssetSelect(safe);
       }}
@@ -230,7 +231,8 @@ function VideoObject({ safe }) {
         degToRad(safe.rotation.z),
       ]}
       scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
         console.log("Clicked Video:", safe);
         setCurrentAssetSelect(safe);
       }}
@@ -258,7 +260,8 @@ function ImageObject({ safe }) {
         degToRad(safe.rotation.z),
       ]}
       scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
         console.log("Clicked Image:", safe);
         setCurrentAssetSelect(safe);
       }}
