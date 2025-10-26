@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useImageAssets, getImageUrl } from "../hook/useImageAssets";
 import { useVideoAssets, getVideoUrl } from "../hook/useVideoAssets";
+import { useThreeDAssets, getThreeDUrl } from "../hook/useThreeDAssets";
 import { useNavigate } from "react-router-dom";
 import projectStore from "../utils/projectStore";
 
@@ -24,6 +25,13 @@ const ToolAssets = ({ currentState }) => {
     isLoading: videoLoading,
     error: videoError,
   } = useVideoAssets();
+
+  // call the 3D assets hook at top-level
+  const {
+    data: threeDAssetsData,
+    isLoading: threeDLoading,
+    error: threeDError,
+  } = useThreeDAssets();
 
   const buttonClasses = (type) =>
     `px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ` +
@@ -50,6 +58,13 @@ const ToolAssets = ({ currentState }) => {
       console.log("Video assets loading:", videoLoading);
       console.log("Video assets data:", videoAssetsData);
       if (videoError) console.error("Video assets error:", videoError);
+    }
+
+    // If user clicked 3D, log 3D assets from hook
+    if (type === "3D") {
+      console.log("3D assets loading:", threeDLoading);
+      console.log("3D assets data:", threeDAssetsData);
+      if (threeDError) console.error("3D assets error:", threeDError);
     }
   };
 
@@ -188,6 +203,31 @@ const ToolAssets = ({ currentState }) => {
                   muted
                 />
                 <p className="text-xs text-gray-600 truncate">{video.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {selectedAssetType === "3D" && threeDAssetsData && (
+          <div className="grid grid-cols-4 gap-4 overflow-y-auto flex-grow">
+            {threeDAssetsData.map((model) => (
+              <div
+                key={model.id}
+                className="cursor-pointer p-2 border rounded-lg hover:shadow-md transition-shadow"
+                onClick={() => {
+                  console.log("Selected 3D Model:", model);
+                  const assetData = {
+                    ...model,
+                    src: getThreeDUrl(model.name),
+                    type: "3D Model",
+                  };
+                  addAsset(assetData, currentState);
+                }}
+              >
+                <div className="w-full h-20 bg-gray-100 rounded-md mb-2 flex items-center justify-center">
+                  <span className="text-gray-500 text-xs">📦 3D</span>
+                </div>
+                <p className="text-xs text-gray-600 truncate">{model.name}</p>
               </div>
             ))}
           </div>
