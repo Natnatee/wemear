@@ -3,17 +3,21 @@ import axiosInstance from "../utils/axios";
 
 // Fetch all projects
 export const useProjects = () => {
-  return useQuery("project", async () => {
-    console.log("useProjects");
-    const response = await axiosInstance.get("/rest/v1/project");
-    return response.data;
-  }, {
-    staleTime: 5 * 60 * 1000, // ถือว่าข้อมูลยังใหม่อยู่ 5 นาที
-    cacheTime: 10 * 60 * 1000, // เก็บ cache ไว้ 10 นาที
-    refetchOnWindowFocus: false, // ปิดการ refetch เมื่อ focus กลับมาที่หน้าต่าง
-    refetchOnMount: false, // ไม่ refetch เมื่อ component mount ถ้ามี cache อยู่แล้ว
-    refetchOnReconnect: true, // refetch เมื่อ internet กลับมา (ควรเปิดไว้)
-  });
+  return useQuery(
+    "project",
+    async () => {
+      console.log("useProjects");
+      const response = await axiosInstance.get("/rest/v1/project");
+      return response.data;
+    },
+    {
+      staleTime: 5 * 60 * 1000, // ถือว่าข้อมูลยังใหม่อยู่ 5 นาที
+      cacheTime: 10 * 60 * 1000, // เก็บ cache ไว้ 10 นาที
+      refetchOnWindowFocus: false, // ปิดการ refetch เมื่อ focus กลับมาที่หน้าต่าง
+      refetchOnMount: false, // ไม่ refetch เมื่อ component mount ถ้ามี cache อยู่แล้ว
+      refetchOnReconnect: true, // refetch เมื่อ internet กลับมา (ควรเปิดไว้)
+    }
+  );
 };
 
 // Create new project
@@ -28,21 +32,61 @@ export const useCreateProject = () => {
 
       const projectData = {
         workspace_id: workspaceId,
-        project_image: "https://supabase.wemear.com/storage/v1/object/public/project-card/default.jpg",
+        project_image:
+          "https://supabase.wemear.com/storage/v1/object/public/project-card/default.jpg",
         project_name: projectName,
         label: "New",
         owner: userData?.user_name || "Unknown",
         status: "Unpublished",
         tool: [tool],
-        user_id: userData?.user_id
+        user_id: userData?.user_id,
       };
 
-      const response = await axiosInstance.post("/rest/v1/project", projectData);
+      const response = await axiosInstance.post(
+        "/rest/v1/project",
+        projectData
+      );
       return response.data;
     },
     {
       onSuccess: () => {
         // Invalidate and refetch projects after successful creation
+        queryClient.invalidateQueries("project");
+      },
+    }
+  );
+};
+
+// Update project
+export const useUpdateProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    async (project) => {
+      const updateData = {
+        p_project_id: project.project_id,
+        p_project_name: project.name || null,
+        p_project_image: project.image || null,
+        p_label: project.label || null,
+        p_owner: project.owner || null,
+        p_status: project.status || null,
+        p_tool: project.tool
+          ? Array.isArray(project.tool)
+            ? project.tool
+            : project.tool.split(", ")
+          : null,
+        p_info: project.info || null,
+      };
+
+      const response = await axiosInstance.post(
+        "/rest/v1/rpc/update_project_with_details",
+        updateData
+      );
+      return response.data;
+    },
+    {
+      onSuccess: () => {
+        // Invalidate and refetch projects after successful update
         queryClient.invalidateQueries("project");
       },
     }

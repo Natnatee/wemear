@@ -6,7 +6,7 @@ import ModalImageUpdate from "../components/ModalImageUpdate";
 import SectionSceneImage from "../components/SectionSceneImage";
 import projectStore from "../utils/projectStore.js";
 import axiosInstance from "../utils/axios";
-
+import { useUpdateProject } from "../hook/useProject";
 
 function Project() {
   const { id } = useParams();
@@ -19,8 +19,12 @@ function Project() {
   const setProject = projectStore((state) => state.setProject);
   const setProjectName = projectStore((state) => state.setProjectName);
   const setProjectLabel = projectStore((state) => state.setProjectLabel);
-  const loadProjectFromStorage = projectStore((state) => state.loadProjectFromStorage);
+  const loadProjectFromStorage = projectStore(
+    (state) => state.loadProjectFromStorage
+  );
   const saveProject = projectStore((state) => state.saveProject);
+
+  const updateProjectMutation = useUpdateProject();
 
   // โหลดข้อมูลจาก API
   useEffect(() => {
@@ -59,11 +63,16 @@ function Project() {
             name: apiData.project_name,
             label: apiData.label,
             owner: apiData.owner,
-            date: new Date(apiData.created_at).toLocaleDateString('th-TH'),
+            date: new Date(apiData.created_at).toLocaleDateString("th-TH"),
             status: apiData.status,
-            tool: Array.isArray(apiData.tool) ? apiData.tool.join(", ") : apiData.tool,
+            tool: Array.isArray(apiData.tool)
+              ? apiData.tool.join(", ")
+              : apiData.tool,
             link: apiData.link,
-            info: apiData.project_info?.info || { tracking_modes: {}, shared_assets: [] },
+            info: apiData.project_info?.info || {
+              tracking_modes: {},
+              shared_assets: [],
+            },
           };
 
           setProject(projectData);
@@ -87,10 +96,10 @@ function Project() {
       saveProject();
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [saveProject]);
 
@@ -106,8 +115,6 @@ function Project() {
     setShowSaveIndicator(true);
     setTimeout(() => setShowSaveIndicator(false), 2000);
   };
-
-
 
   // Loading state
   if (isLoading) {
@@ -251,10 +258,11 @@ function Project() {
                   <div>
                     <span className="font-medium text-gray-700">สถานะ:</span>
                     <span
-                      className={`ml-2 px-2 py-1 rounded text-sm ${project.status === "Published"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                        }`}
+                      className={`ml-2 px-2 py-1 rounded text-sm ${
+                        project.status === "Published"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
                     >
                       {project.status}
                     </span>
@@ -274,14 +282,25 @@ function Project() {
           <div className="bg-white rounded-lg shadow-md p-8">
             <QRCodeGenerator link={project.link} />
             <button
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 saveProject(); // Save ก่อน deploy
                 console.log(project);
+                updateProjectMutation.mutate(project);
               }}
+              disabled={updateProjectMutation.isLoading}
             >
-              Deploy
+              {updateProjectMutation.isLoading ? "กำลัง Deploy..." : "Deploy"}
             </button>
+            {updateProjectMutation.isSuccess && (
+              <div className="mt-2 text-green-600 text-sm">Deploy สำเร็จ!</div>
+            )}
+            {updateProjectMutation.isError && (
+              <div className="mt-2 text-red-600 text-sm">
+                เกิดข้อผิดพลาด:{" "}
+                {updateProjectMutation.error?.message || "ไม่สามารถ Deploy ได้"}
+              </div>
+            )}
           </div>
         </div>
       </div>
