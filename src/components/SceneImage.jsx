@@ -1,17 +1,16 @@
-import React, { useEffect, useMemo } from 'react';
-import { useThree, useLoader, extend } from '@react-three/fiber';
-import { OrbitControls, Plane, Grid } from '@react-three/drei';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { TextureLoader, VideoTexture, DoubleSide } from 'three';
-import * as THREE from 'three';
-
+import React, { useEffect, useMemo } from "react";
+import { useThree, useLoader, extend } from "@react-three/fiber";
+import { OrbitControls, Plane, Grid } from "@react-three/drei";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { TextureLoader, VideoTexture, DoubleSide } from "three";
+import * as THREE from "three";
 
 // Extend THREE namespace เพื่อรองรับ video element
 extend({ VideoTexture });
 
-function SceneImage({scene}) {
+function SceneImage({ scene }) {
   const { scene: threeScene } = useThree();
-  console.log("SceneImage:",scene)
+  console.log("SceneImage:", scene);
   // ตั้งค่าแสงเหมือนใน modelViewer.js
   const lights = useMemo(() => {
     const ambientLight = new THREE.AmbientLight(0xfff5cc, 2);
@@ -31,9 +30,9 @@ function SceneImage({scene}) {
 
   // เพิ่มแสงเข้า scene
   useEffect(() => {
-    lights.forEach(light => threeScene.add(light));
+    lights.forEach((light) => threeScene.add(light));
     return () => {
-      lights.forEach(light => threeScene.remove(light));
+      lights.forEach((light) => threeScene.remove(light));
     };
   }, [threeScene, lights]);
 
@@ -102,23 +101,25 @@ function SceneObjectWrapper({ config, index }) {
       position: {
         x: config?.position?.[0] ?? def.x,
         y: config?.position?.[1] ?? def.y,
-        z: config?.position?.[2] ?? def.z
+        z: config?.position?.[2] ?? def.z,
       },
       scale: {
         x: config?.scale?.[0] ?? defScale.x,
         y: config?.scale?.[1] ?? defScale.y,
-        z: config?.scale?.[2] ?? defScale.z
+        z: config?.scale?.[2] ?? defScale.z,
       },
       rotation: {
         x: config?.rotation?.[0] ?? defRotation.x,
         y: config?.rotation?.[1] ?? defRotation.y,
-        z: config?.rotation?.[2] ?? defRotation.z
+        z: config?.rotation?.[2] ?? defRotation.z,
       },
     };
   }, [config]);
 
   if (!safe.src) {
-    console.warn(`Object config at index ${index} has no src and will be skipped.`);
+    console.warn(
+      `Object config at index ${index} has no src and will be skipped.`
+    );
     return null;
   }
 
@@ -160,7 +161,12 @@ function Model3D({ safe }) {
     return clonedScene;
   }, [gltf, safe]);
 
-  return <primitive object={model} />;
+  return (
+    <primitive
+      object={model}
+      onClick={() => console.log("Clicked 3D Model:", safe)}
+    />
+  );
 }
 
 // Component สำหรับ Videos
@@ -168,7 +174,7 @@ function VideoObject({ safe }) {
   const degToRad = (d) => (d * Math.PI) / 180;
 
   const texture = useMemo(() => {
-    const video = document.createElement('video');
+    const video = document.createElement("video");
     video.src = safe.src;
     video.crossOrigin = "anonymous";
     video.loop = true;
@@ -181,7 +187,7 @@ function VideoObject({ safe }) {
       try {
         await video.play();
       } catch (error) {
-        console.warn('Autoplay was prevented:', error);
+        console.warn("Autoplay was prevented:", error);
       }
     };
 
@@ -189,9 +195,13 @@ function VideoObject({ safe }) {
     if (video.readyState >= 2) {
       playVideo();
     } else {
-      video.addEventListener('canplay', () => {
-        playVideo();
-      }, { once: true });
+      video.addEventListener(
+        "canplay",
+        () => {
+          playVideo();
+        },
+        { once: true }
+      );
     }
 
     return new VideoTexture(video);
@@ -203,15 +213,13 @@ function VideoObject({ safe }) {
       rotation={[
         degToRad(safe.rotation.x),
         degToRad(safe.rotation.y),
-        degToRad(safe.rotation.z)
+        degToRad(safe.rotation.z),
       ]}
       scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
+      onClick={() => console.log("Clicked Video:", safe)}
     >
       <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial
-        map={texture}
-        side={DoubleSide}
-      />
+      <meshBasicMaterial map={texture} side={DoubleSide} />
     </mesh>
   );
 }
@@ -227,15 +235,13 @@ function ImageObject({ safe }) {
       rotation={[
         degToRad(safe.rotation.x),
         degToRad(safe.rotation.y),
-        degToRad(safe.rotation.z)
+        degToRad(safe.rotation.z),
       ]}
       scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
+      onClick={() => console.log("Clicked Image:", safe)}
     >
       <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial
-        map={texture}
-        side={DoubleSide}
-      />
+      <meshBasicMaterial map={texture} side={DoubleSide} />
     </mesh>
   );
 }
