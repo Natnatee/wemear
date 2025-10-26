@@ -1,6 +1,12 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { useThree, useLoader, extend } from "@react-three/fiber";
-import { OrbitControls, Plane, Grid } from "@react-three/drei";
+import {
+  OrbitControls,
+  Plane,
+  Grid,
+  Box,
+  TransformControls,
+} from "@react-three/drei";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { TextureLoader, VideoTexture, DoubleSide } from "three";
 import * as THREE from "three";
@@ -11,6 +17,7 @@ extend({ VideoTexture });
 
 function SceneImage({ scene }) {
   const { scene: threeScene } = useThree();
+  const currentAssetSelect = projectStore((state) => state.currentAssetSelect);
   console.log("SceneImage:", scene);
   // ตั้งค่าแสงเหมือนใน modelViewer.js
   const lights = useMemo(() => {
@@ -87,6 +94,7 @@ function SceneImage({ scene }) {
           key={config?.asset_id || index}
           config={config}
           index={index}
+          isSelected={currentAssetSelect?.src === config?.src}
         />
       ))}
     </>
@@ -94,7 +102,7 @@ function SceneImage({ scene }) {
 }
 
 // Component แยกสำหรับจัดการแต่ละ object เพื่อหลีกเลี่ยงปัญหา conditional hooks
-function SceneObjectWrapper({ config, index }) {
+function SceneObjectWrapper({ config, index, isSelected }) {
   const safe = useMemo(() => {
     const def = { x: 0, y: 0.05, z: 0 };
     const defScale = { x: 1, y: 1, z: 1 };
@@ -129,27 +137,28 @@ function SceneObjectWrapper({ config, index }) {
   }
 
   if (safe.type === "3D Model" || !safe.type) {
-    return <Model3D safe={safe} />;
+    return <Model3D safe={safe} isSelected={isSelected} />;
   }
 
   if (safe.type === "Video") {
-    return <VideoObject safe={safe} />;
+    return <VideoObject safe={safe} isSelected={isSelected} />;
   }
 
   if (safe.type === "Image") {
-    return <ImageObject safe={safe} />;
+    return <ImageObject safe={safe} isSelected={isSelected} />;
   }
 
   return null;
 }
 
 // Component สำหรับ 3D Models
-function Model3D({ safe }) {
+function Model3D({ safe, isSelected }) {
   const gltf = useLoader(GLTFLoader, safe.src);
   const degToRad = (d) => (d * Math.PI) / 180;
   const setCurrentAssetSelect = projectStore(
     (state) => state.setCurrentAssetSelect
   );
+  const modelRef = useRef();
 
   const model = useMemo(() => {
     const clonedScene = gltf.scene.clone();
@@ -170,23 +179,39 @@ function Model3D({ safe }) {
   }, [gltf, safe]);
 
   return (
-    <primitive
-      object={model}
-      onClick={(e) => {
-        e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
-        console.log("Clicked 3D Model:", safe);
-        setCurrentAssetSelect(safe);
-      }}
-    />
+    <>
+      <group ref={modelRef}>
+        <primitive
+          object={model}
+          onClick={(e) => {
+            e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
+            console.log("Clicked 3D Model:", safe);
+            setCurrentAssetSelect(safe);
+          }}
+        />
+        {isSelected && (
+          <Box
+            position={[safe.position.x, safe.position.y, safe.position.z]}
+            scale={[safe.scale.x * 1.1, safe.scale.y * 1.1, safe.scale.z * 1.1]}
+          >
+            <meshBasicMaterial color="yellow" wireframe />
+          </Box>
+        )}
+      </group>
+      {isSelected && modelRef.current && (
+        <TransformControls object={modelRef.current} mode="translate" />
+      )}
+    </>
   );
 }
 
 // Component สำหรับ Videos
-function VideoObject({ safe }) {
+function VideoObject({ safe, isSelected }) {
   const degToRad = (d) => (d * Math.PI) / 180;
   const setCurrentAssetSelect = projectStore(
     (state) => state.setCurrentAssetSelect
   );
+  const meshRef = useRef();
 
   const texture = useMemo(() => {
     const video = document.createElement("video");
@@ -223,52 +248,95 @@ function VideoObject({ safe }) {
   }, [safe.src]);
 
   return (
-    <mesh
-      position={[safe.position.x, safe.position.y, safe.position.z]}
-      rotation={[
-        degToRad(safe.rotation.x),
-        degToRad(safe.rotation.y),
-        degToRad(safe.rotation.z),
-      ]}
-      scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-      onClick={(e) => {
-        e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
-        console.log("Clicked Video:", safe);
-        setCurrentAssetSelect(safe);
-      }}
-    >
-      <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial map={texture} side={DoubleSide} />
-    </mesh>
+    <>
+      <mesh
+        ref={meshRef}
+        position={[safe.position.x, safe.position.y, safe.position.z]}
+        rotation={[
+          degToRad(safe.rotation.x),
+          degToRad(safe.rotation.y),
+          degToRad(safe.rotation.z),
+        ]}
+        scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
+        onClick={(e) => {
+          e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
+          console.log("Clicked Video:", safe);
+          setCurrentAssetSelect(safe);
+        }}
+      >
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={texture} side={DoubleSide} />
+      </mesh>
+      {isSelected && (
+        <>
+          <Box
+            position={[safe.position.x, safe.position.y, safe.position.z]}
+            rotation={[
+              degToRad(safe.rotation.x),
+              degToRad(safe.rotation.y),
+              degToRad(safe.rotation.z),
+            ]}
+            scale={[safe.scale.x * 1.1, safe.scale.y * 1.1, 0.1]}
+          >
+            <meshBasicMaterial color="yellow" wireframe />
+          </Box>
+          {meshRef.current && (
+            <TransformControls object={meshRef.current} mode="translate" />
+          )}
+        </>
+      )}
+    </>
   );
 }
 
 // Component สำหรับ Images
-function ImageObject({ safe }) {
+function ImageObject({ safe, isSelected }) {
   const texture = useLoader(TextureLoader, safe.src);
   const degToRad = (d) => (d * Math.PI) / 180;
   const setCurrentAssetSelect = projectStore(
     (state) => state.setCurrentAssetSelect
   );
+  const meshRef = useRef();
 
   return (
-    <mesh
-      position={[safe.position.x, safe.position.y, safe.position.z]}
-      rotation={[
-        degToRad(safe.rotation.x),
-        degToRad(safe.rotation.y),
-        degToRad(safe.rotation.z),
-      ]}
-      scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-      onClick={(e) => {
-        e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
-        console.log("Clicked Image:", safe);
-        setCurrentAssetSelect(safe);
-      }}
-    >
-      <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial map={texture} side={DoubleSide} />
-    </mesh>
+    <>
+      <mesh
+        ref={meshRef}
+        position={[safe.position.x, safe.position.y, safe.position.z]}
+        rotation={[
+          degToRad(safe.rotation.x),
+          degToRad(safe.rotation.y),
+          degToRad(safe.rotation.z),
+        ]}
+        scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
+        onClick={(e) => {
+          e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
+          console.log("Clicked Image:", safe);
+          setCurrentAssetSelect(safe);
+        }}
+      >
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={texture} side={DoubleSide} />
+      </mesh>
+      {isSelected && (
+        <>
+          <Box
+            position={[safe.position.x, safe.position.y, safe.position.z]}
+            rotation={[
+              degToRad(safe.rotation.x),
+              degToRad(safe.rotation.y),
+              degToRad(safe.rotation.z),
+            ]}
+            scale={[safe.scale.x * 1.1, safe.scale.y * 1.1, 0.1]}
+          >
+            <meshBasicMaterial color="yellow" wireframe />
+          </Box>
+          {meshRef.current && (
+            <TransformControls object={meshRef.current} mode="translate" />
+          )}
+        </>
+      )}
+    </>
   );
 }
 
