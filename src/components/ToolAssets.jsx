@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useImageAssets, getImageUrl } from "../hook/useImageAssets";
+import { useVideoAssets, getVideoUrl } from "../hook/useVideoAssets";
 import { useNavigate } from "react-router-dom";
 import projectStore from "../utils/projectStore";
 
@@ -16,6 +17,13 @@ const ToolAssets = ({ currentState }) => {
     isLoading: imageLoading,
     error: imageError,
   } = useImageAssets();
+
+  // call the video assets hook at top-level
+  const {
+    data: videoAssetsData,
+    isLoading: videoLoading,
+    error: videoError,
+  } = useVideoAssets();
 
   const buttonClasses = (type) =>
     `px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ` +
@@ -35,6 +43,13 @@ const ToolAssets = ({ currentState }) => {
       console.log("Image assets loading:", imageLoading);
       console.log("Image assets data:", imageAssetsData);
       if (imageError) console.error("Image assets error:", imageError);
+    }
+
+    // If user clicked Video, log video assets from hook
+    if (type === "Video") {
+      console.log("Video assets loading:", videoLoading);
+      console.log("Video assets data:", videoAssetsData);
+      if (videoError) console.error("Video assets error:", videoError);
     }
   };
 
@@ -69,9 +84,7 @@ const ToolAssets = ({ currentState }) => {
           className="absolute inset-0 bg-black opacity-40"
           onClick={onClose}
         />
-        <div
-          className="relative bg-white rounded-lg shadow-xl w-11/12 max-w-3xl max-h-[90vh] p-6 flex flex-col"
-        >
+        <div className="relative bg-white rounded-lg shadow-xl w-11/12 max-w-3xl max-h-[90vh] p-6 flex flex-col">
           {children}
         </div>
       </div>,
@@ -133,10 +146,11 @@ const ToolAssets = ({ currentState }) => {
                 className="cursor-pointer p-2 border rounded-lg hover:shadow-md transition-shadow"
                 onClick={() => {
                   console.log("Selected Image:", image);
-                  // เพิ่ม src โดยตรงใน image object
+                  // เพิ่ม src และ type โดยตรงใน image object
                   const assetData = {
                     ...image,
-                    src: getImageUrl(image.name)
+                    src: getImageUrl(image.name),
+                    type: "Image",
                   };
                   addAsset(assetData, currentState);
                 }}
@@ -147,6 +161,33 @@ const ToolAssets = ({ currentState }) => {
                   className="w-full h-20 object-cover rounded-md mb-2"
                 />
                 <p className="text-xs text-gray-600 truncate">{image.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {selectedAssetType === "Video" && videoAssetsData && (
+          <div className="grid grid-cols-4 gap-4 overflow-y-auto flex-grow">
+            {videoAssetsData.map((video) => (
+              <div
+                key={video.id}
+                className="cursor-pointer p-2 border rounded-lg hover:shadow-md transition-shadow"
+                onClick={() => {
+                  console.log("Selected Video:", video);
+                  const assetData = {
+                    ...video,
+                    src: getVideoUrl(video.name),
+                    type: "Video",
+                  };
+                  addAsset(assetData, currentState);
+                }}
+              >
+                <video
+                  src={getVideoUrl(video.name)}
+                  className="w-full h-20 object-cover rounded-md mb-2"
+                  muted
+                />
+                <p className="text-xs text-gray-600 truncate">{video.name}</p>
               </div>
             ))}
           </div>

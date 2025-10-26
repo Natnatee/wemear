@@ -6,8 +6,8 @@ const debouncedSave = (project) => {
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => {
     if (project) {
-      localStorage.setItem('current_project', JSON.stringify(project));
-      console.log('Project auto-saved to localStorage');
+      localStorage.setItem("current_project", JSON.stringify(project));
+      console.log("Project auto-saved to localStorage");
     }
   }, 1000); // รอ 1 วินาทีหลังจากแก้ไขล่าสุด
 };
@@ -15,10 +15,10 @@ const debouncedSave = (project) => {
 // Load project from localStorage
 const loadProjectFromStorage = () => {
   try {
-    const stored = localStorage.getItem('current_project');
+    const stored = localStorage.getItem("current_project");
     return stored ? JSON.parse(stored) : null;
   } catch (error) {
-    console.error('Error loading project from localStorage:', error);
+    console.error("Error loading project from localStorage:", error);
     return null;
   }
 };
@@ -30,17 +30,17 @@ const generateNewAssetId = (info) => {
   for (const modeKey in info.tracking_modes) {
     const mode = info.tracking_modes[modeKey];
     if (mode.tracks) {
-      mode.tracks.forEach(track => {
-        track.scenes.forEach(scene => {
+      mode.tracks.forEach((track) => {
+        track.scenes.forEach((scene) => {
           if (scene.assets) {
-            scene.assets.forEach(asset => allAssetIds.add(asset.asset_id));
+            scene.assets.forEach((asset) => allAssetIds.add(asset.asset_id));
           }
         });
       });
     } else if (mode.scenes) {
-      mode.scenes.forEach(scene => {
+      mode.scenes.forEach((scene) => {
         if (scene.assets) {
-          scene.assets.forEach(asset => allAssetIds.add(asset.asset_id));
+          scene.assets.forEach((asset) => allAssetIds.add(asset.asset_id));
         }
       });
     }
@@ -79,7 +79,7 @@ const projectStore = create((set, get) => ({
   // Clear project and localStorage
   removeAllProjects: () => {
     set({ project: null });
-    localStorage.removeItem('current_project');
+    localStorage.removeItem("current_project");
     clearTimeout(saveTimeout);
   },
 
@@ -104,8 +104,8 @@ const projectStore = create((set, get) => ({
     const { project } = get();
     if (project) {
       clearTimeout(saveTimeout);
-      localStorage.setItem('current_project', JSON.stringify(project));
-      console.log('Project manually saved to localStorage');
+      localStorage.setItem("current_project", JSON.stringify(project));
+      console.log("Project manually saved to localStorage");
     }
   },
 
@@ -117,7 +117,7 @@ const projectStore = create((set, get) => ({
         return state;
       }
 
-      const parts = currentState.split('_'); // e.g., ["IMAGE", "T1S1"]
+      const parts = currentState.split("_"); // e.g., ["IMAGE", "T1S1"]
       if (parts.length < 2) {
         console.error("Invalid currentState format:", currentState);
         return state;
@@ -142,23 +142,29 @@ const projectStore = create((set, get) => ({
         const sceneMatch = trackAndSceneIdentifier.match(/S(\d+)/);
 
         if (!trackMatch || !sceneMatch) {
-          console.error("Could not parse trackId or sceneId from currentState for image mode:", currentState);
+          console.error(
+            "Could not parse trackId or sceneId from currentState for image mode:",
+            currentState
+          );
           return state;
         }
         const trackId = "T" + trackMatch[1];
         const sceneId = "S" + sceneMatch[1];
 
-        targetTrack = trackingMode.tracks.find(t => t.track_id === trackId);
+        targetTrack = trackingMode.tracks.find((t) => t.track_id === trackId);
         if (targetTrack) {
-          targetScene = targetTrack.scenes.find(s => s.scene_id === sceneId);
+          targetScene = targetTrack.scenes.find((s) => s.scene_id === sceneId);
         }
-      } else { // face or world tracking
+      } else {
+        // face or world tracking
         const sceneId = trackAndSceneIdentifier;
-        targetScene = trackingMode.scenes.find(s => s.scene_id === sceneId);
+        targetScene = trackingMode.scenes.find((s) => s.scene_id === sceneId);
       }
 
       if (!targetScene) {
-        console.error(`Target scene not found for currentState: ${currentState}`);
+        console.error(
+          `Target scene not found for currentState: ${currentState}`
+        );
         return state;
       }
 
@@ -172,7 +178,7 @@ const projectStore = create((set, get) => ({
         rotation: [0, 0, 0],
         // เพิ่ม src และ type โดยตรงในแต่ละ asset แทนการใช้ shared_assets
         src: assetData.src || `/assets/${assetData.name}`,
-        type: "Image" // Fixed for image type
+        type: assetData.type || "Image", // ใช้ type จาก assetData หรือ default เป็น Image
       };
 
       // Ensure assets array exists for the scene
