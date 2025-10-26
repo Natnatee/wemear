@@ -55,6 +55,11 @@ function SceneImage({ scene }) {
         maxDistance={50}
         enablePan
         enableZoom
+        mouseButtons={{
+          LEFT: null, // ปิดการหมุนด้วยเมาส์ซ้าย
+          MIDDLE: THREE.MOUSE.ROTATE, // ใช้ scroll wheel (กดล้อ) ในการหมุน
+          RIGHT: THREE.MOUSE.PAN, // ใช้เมาส์ขวาในการ pan
+        }}
       />
 
       {/* พื้นและ Grid สำหรับ reference */}
