@@ -117,6 +117,7 @@ function SceneObjectWrapper({ config, index, isSelected, orbitControlsRef }) {
     const defRotation = { x: 0, y: 0, z: 0 };
 
     return {
+      asset_id: config?.asset_id || null,
       src: config?.src || null,
       type: config?.type,
       position: {
@@ -181,8 +182,12 @@ function SceneObjectWrapper({ config, index, isSelected, orbitControlsRef }) {
 function Model3D({ safe, isSelected, orbitControlsRef }) {
   const gltf = useLoader(GLTFLoader, safe.src);
   const degToRad = (d) => (d * Math.PI) / 180;
+  const radToDeg = (r) => (r * 180) / Math.PI;
   const setCurrentAssetSelect = projectStore(
     (state) => state.setCurrentAssetSelect
+  );
+  const updateAssetTransform = projectStore(
+    (state) => state.updateAssetTransform
   );
   const groupRef = useRef();
 
@@ -229,15 +234,22 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
           }}
           onMouseUp={() => {
             console.log("🟢 หยุดลาก");
-            console.log("Group position:", groupRef.current.position);
+            const pos = groupRef.current.position;
+            const rot = groupRef.current.rotation;
+            const scale = groupRef.current.scale;
+
+            console.log("Group position:", pos);
             console.log("Model position:", model.position);
+
+            // บันทึกค่าใหม่ลง projectStore
+            updateAssetTransform(safe.asset_id, {
+              position: [pos.x, pos.y, pos.z],
+              rotation: [radToDeg(rot.x), radToDeg(rot.y), radToDeg(rot.z)],
+              scale: [scale.x, scale.y, scale.z],
+            });
+
             orbitControlsRef.current &&
               (orbitControlsRef.current.enabled = true);
-          }}
-          onChange={() => {
-            console.log("🔵 กำลังลาก...");
-            console.log("Group position:", groupRef.current.position);
-            console.log("Model position:", model.position);
           }}
         />
       )}
@@ -248,8 +260,12 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
 // Component สำหรับ Videos
 function VideoObject({ safe, isSelected, orbitControlsRef }) {
   const degToRad = (d) => (d * Math.PI) / 180;
+  const radToDeg = (r) => (r * 180) / Math.PI;
   const setCurrentAssetSelect = projectStore(
     (state) => state.setCurrentAssetSelect
+  );
+  const updateAssetTransform = projectStore(
+    (state) => state.updateAssetTransform
   );
   const meshRef = useRef();
 
@@ -315,10 +331,21 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
             orbitControlsRef.current &&
             (orbitControlsRef.current.enabled = false)
           }
-          onMouseUp={() =>
+          onMouseUp={() => {
+            const pos = meshRef.current.position;
+            const rot = meshRef.current.rotation;
+            const scale = meshRef.current.scale;
+
+            // บันทึกค่าใหม่ลง projectStore
+            updateAssetTransform(safe.asset_id, {
+              position: [pos.x, pos.y, pos.z],
+              rotation: [radToDeg(rot.x), radToDeg(rot.y), radToDeg(rot.z)],
+              scale: [scale.x, scale.y, scale.z],
+            });
+
             orbitControlsRef.current &&
-            (orbitControlsRef.current.enabled = true)
-          }
+              (orbitControlsRef.current.enabled = true);
+          }}
         />
       )}
     </>
@@ -329,8 +356,12 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
 function ImageObject({ safe, isSelected, orbitControlsRef }) {
   const texture = useLoader(TextureLoader, safe.src);
   const degToRad = (d) => (d * Math.PI) / 180;
+  const radToDeg = (r) => (r * 180) / Math.PI;
   const setCurrentAssetSelect = projectStore(
     (state) => state.setCurrentAssetSelect
+  );
+  const updateAssetTransform = projectStore(
+    (state) => state.updateAssetTransform
   );
   const meshRef = useRef();
 
@@ -362,10 +393,21 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
             orbitControlsRef.current &&
             (orbitControlsRef.current.enabled = false)
           }
-          onMouseUp={() =>
+          onMouseUp={() => {
+            const pos = meshRef.current.position;
+            const rot = meshRef.current.rotation;
+            const scale = meshRef.current.scale;
+
+            // บันทึกค่าใหม่ลง projectStore
+            updateAssetTransform(safe.asset_id, {
+              position: [pos.x, pos.y, pos.z],
+              rotation: [radToDeg(rot.x), radToDeg(rot.y), radToDeg(rot.z)],
+              scale: [scale.x, scale.y, scale.z],
+            });
+
             orbitControlsRef.current &&
-            (orbitControlsRef.current.enabled = true)
-          }
+              (orbitControlsRef.current.enabled = true);
+          }}
         />
       )}
     </>

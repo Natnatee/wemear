@@ -93,6 +93,73 @@ const projectStore = create((set, get) => ({
     }
   },
 
+  // Update asset transform (position, rotation, scale)
+  updateAssetTransform: (assetId, transform) => {
+    set((state) => {
+      const currentProject = state.project;
+      if (!currentProject) {
+        console.error("No project loaded.");
+        return state;
+      }
+
+      const updatedProject = JSON.parse(JSON.stringify(currentProject));
+      let assetFound = false;
+
+      // ค้นหา asset ในทุก tracking mode
+      const trackingModes = updatedProject.info.tracking_modes;
+
+      for (const modeKey in trackingModes) {
+        const mode = trackingModes[modeKey];
+
+        // สำหรับ image tracking (มี tracks)
+        if (mode.tracks) {
+          for (const track of mode.tracks) {
+            for (const scene of track.scenes) {
+              if (scene.assets) {
+                const asset = scene.assets.find((a) => a.asset_id === assetId);
+                if (asset) {
+                  if (transform.position) asset.position = transform.position;
+                  if (transform.rotation) asset.rotation = transform.rotation;
+                  if (transform.scale) asset.scale = transform.scale;
+                  assetFound = true;
+                  break;
+                }
+              }
+            }
+            if (assetFound) break;
+          }
+        }
+
+        // สำหรับ face/world tracking (มี scenes โดยตรง)
+        if (mode.scenes && !assetFound) {
+          for (const scene of mode.scenes) {
+            if (scene.assets) {
+              const asset = scene.assets.find((a) => a.asset_id === assetId);
+              if (asset) {
+                if (transform.position) asset.position = transform.position;
+                if (transform.rotation) asset.rotation = transform.rotation;
+                if (transform.scale) asset.scale = transform.scale;
+                assetFound = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (assetFound) break;
+      }
+
+      if (assetFound) {
+        console.log("✅ Asset transform updated:", assetId, transform);
+        debouncedSave(updatedProject);
+        return { project: updatedProject };
+      } else {
+        console.warn("⚠️ Asset not found:", assetId);
+        return state;
+      }
+    });
+  },
+
   addAssetToScene: (assetData, currentState) => {
     set((state) => {
       const currentProject = state.project;
