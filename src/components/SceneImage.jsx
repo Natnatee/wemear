@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { useThree, useLoader, extend } from "@react-three/fiber";
+import { useThree, useLoader, extend, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
   Plane,
@@ -250,6 +250,15 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
     (state) => state.setCurrentAssetSelect
   );
   const meshRef = useRef();
+  const boxRef = useRef();
+
+  // อัพเดท Box position/rotation ทุก frame เมื่อถูกเลือก
+  useFrame(() => {
+    if (isSelected && meshRef.current && boxRef.current) {
+      boxRef.current.position.copy(meshRef.current.position);
+      boxRef.current.rotation.copy(meshRef.current.rotation);
+    }
+  });
 
   const texture = useMemo(() => {
     const video = document.createElement("video");
@@ -287,52 +296,47 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
 
   return (
     <>
-      <mesh
-        ref={meshRef}
-        position={[safe.position.x, safe.position.y, safe.position.z]}
-        rotation={[
-          degToRad(safe.rotation.x),
-          degToRad(safe.rotation.y),
-          degToRad(safe.rotation.z),
-        ]}
-        scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-        onClick={(e) => {
-          e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
-          console.log("Clicked Video:", safe);
-          setCurrentAssetSelect(safe);
-        }}
-      >
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial map={texture} side={DoubleSide} />
-      </mesh>
-      {isSelected && (
-        <>
+      <group>
+        <mesh
+          ref={meshRef}
+          position={[safe.position.x, safe.position.y, safe.position.z]}
+          rotation={[
+            degToRad(safe.rotation.x),
+            degToRad(safe.rotation.y),
+            degToRad(safe.rotation.z),
+          ]}
+          scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
+          onClick={(e) => {
+            e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
+            console.log("Clicked Video:", safe);
+            setCurrentAssetSelect(safe);
+          }}
+        >
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial map={texture} side={DoubleSide} />
+        </mesh>
+        {isSelected && meshRef.current && (
           <Box
-            position={[safe.position.x, safe.position.y, safe.position.z]}
-            rotation={[
-              degToRad(safe.rotation.x),
-              degToRad(safe.rotation.y),
-              degToRad(safe.rotation.z),
-            ]}
+            ref={boxRef}
             scale={[safe.scale.x * 1.1, safe.scale.y * 1.1, 0.1]}
           >
             <meshBasicMaterial color="yellow" wireframe />
           </Box>
-          {meshRef.current && (
-            <TransformControls
-              object={meshRef.current}
-              mode="translate"
-              onMouseDown={() =>
-                orbitControlsRef.current &&
-                (orbitControlsRef.current.enabled = false)
-              }
-              onMouseUp={() =>
-                orbitControlsRef.current &&
-                (orbitControlsRef.current.enabled = true)
-              }
-            />
-          )}
-        </>
+        )}
+      </group>
+      {isSelected && meshRef.current && (
+        <TransformControls
+          object={meshRef.current}
+          mode="translate"
+          onMouseDown={() =>
+            orbitControlsRef.current &&
+            (orbitControlsRef.current.enabled = false)
+          }
+          onMouseUp={() =>
+            orbitControlsRef.current &&
+            (orbitControlsRef.current.enabled = true)
+          }
+        />
       )}
     </>
   );
@@ -346,55 +350,59 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
     (state) => state.setCurrentAssetSelect
   );
   const meshRef = useRef();
+  const boxRef = useRef();
+
+  // อัพเดท Box position/rotation ทุก frame เมื่อถูกเลือก
+  useFrame(() => {
+    if (isSelected && meshRef.current && boxRef.current) {
+      boxRef.current.position.copy(meshRef.current.position);
+      boxRef.current.rotation.copy(meshRef.current.rotation);
+    }
+  });
 
   return (
     <>
-      <mesh
-        ref={meshRef}
-        position={[safe.position.x, safe.position.y, safe.position.z]}
-        rotation={[
-          degToRad(safe.rotation.x),
-          degToRad(safe.rotation.y),
-          degToRad(safe.rotation.z),
-        ]}
-        scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-        onClick={(e) => {
-          e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
-          console.log("Clicked Image:", safe);
-          setCurrentAssetSelect(safe);
-        }}
-      >
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial map={texture} side={DoubleSide} />
-      </mesh>
-      {isSelected && (
-        <>
+      <group>
+        <mesh
+          ref={meshRef}
+          position={[safe.position.x, safe.position.y, safe.position.z]}
+          rotation={[
+            degToRad(safe.rotation.x),
+            degToRad(safe.rotation.y),
+            degToRad(safe.rotation.z),
+          ]}
+          scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
+          onClick={(e) => {
+            e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
+            console.log("Clicked Image:", safe);
+            setCurrentAssetSelect(safe);
+          }}
+        >
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial map={texture} side={DoubleSide} />
+        </mesh>
+        {isSelected && meshRef.current && (
           <Box
-            position={[safe.position.x, safe.position.y, safe.position.z]}
-            rotation={[
-              degToRad(safe.rotation.x),
-              degToRad(safe.rotation.y),
-              degToRad(safe.rotation.z),
-            ]}
+            ref={boxRef}
             scale={[safe.scale.x * 1.1, safe.scale.y * 1.1, 0.1]}
           >
             <meshBasicMaterial color="yellow" wireframe />
           </Box>
-          {meshRef.current && (
-            <TransformControls
-              object={meshRef.current}
-              mode="translate"
-              onMouseDown={() =>
-                orbitControlsRef.current &&
-                (orbitControlsRef.current.enabled = false)
-              }
-              onMouseUp={() =>
-                orbitControlsRef.current &&
-                (orbitControlsRef.current.enabled = true)
-              }
-            />
-          )}
-        </>
+        )}
+      </group>
+      {isSelected && meshRef.current && (
+        <TransformControls
+          object={meshRef.current}
+          mode="translate"
+          onMouseDown={() =>
+            orbitControlsRef.current &&
+            (orbitControlsRef.current.enabled = false)
+          }
+          onMouseUp={() =>
+            orbitControlsRef.current &&
+            (orbitControlsRef.current.enabled = true)
+          }
+        />
       )}
     </>
   );
