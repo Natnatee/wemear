@@ -18,6 +18,8 @@ extend({ VideoTexture });
 function SceneImage({ scene }) {
   const { scene: threeScene } = useThree();
   const currentAssetSelect = projectStore((state) => state.currentAssetSelect);
+  const orbitControlsRef = useRef();
+
   console.log("SceneImage:", scene);
   // ตั้งค่าแสงเหมือนใน modelViewer.js
   const lights = useMemo(() => {
@@ -48,6 +50,7 @@ function SceneImage({ scene }) {
     <>
       {/* Camera Controls */}
       <OrbitControls
+        ref={orbitControlsRef}
         enableDamping
         dampingFactor={0.05}
         screenSpacePanning={false}
@@ -100,6 +103,7 @@ function SceneImage({ scene }) {
           config={config}
           index={index}
           isSelected={currentAssetSelect?.src === config?.src}
+          orbitControlsRef={orbitControlsRef}
         />
       ))}
     </>
@@ -107,7 +111,7 @@ function SceneImage({ scene }) {
 }
 
 // Component แยกสำหรับจัดการแต่ละ object เพื่อหลีกเลี่ยงปัญหา conditional hooks
-function SceneObjectWrapper({ config, index, isSelected }) {
+function SceneObjectWrapper({ config, index, isSelected, orbitControlsRef }) {
   const safe = useMemo(() => {
     const def = { x: 0, y: 0.05, z: 0 };
     const defScale = { x: 1, y: 1, z: 1 };
@@ -142,22 +146,40 @@ function SceneObjectWrapper({ config, index, isSelected }) {
   }
 
   if (safe.type === "3D Model" || !safe.type) {
-    return <Model3D safe={safe} isSelected={isSelected} />;
+    return (
+      <Model3D
+        safe={safe}
+        isSelected={isSelected}
+        orbitControlsRef={orbitControlsRef}
+      />
+    );
   }
 
   if (safe.type === "Video") {
-    return <VideoObject safe={safe} isSelected={isSelected} />;
+    return (
+      <VideoObject
+        safe={safe}
+        isSelected={isSelected}
+        orbitControlsRef={orbitControlsRef}
+      />
+    );
   }
 
   if (safe.type === "Image") {
-    return <ImageObject safe={safe} isSelected={isSelected} />;
+    return (
+      <ImageObject
+        safe={safe}
+        isSelected={isSelected}
+        orbitControlsRef={orbitControlsRef}
+      />
+    );
   }
 
   return null;
 }
 
 // Component สำหรับ 3D Models
-function Model3D({ safe, isSelected }) {
+function Model3D({ safe, isSelected, orbitControlsRef }) {
   const gltf = useLoader(GLTFLoader, safe.src);
   const degToRad = (d) => (d * Math.PI) / 180;
   const setCurrentAssetSelect = projectStore(
@@ -204,14 +226,25 @@ function Model3D({ safe, isSelected }) {
         )}
       </group>
       {isSelected && modelRef.current && (
-        <TransformControls object={modelRef.current} mode="translate" />
+        <TransformControls
+          object={modelRef.current}
+          mode="translate"
+          onMouseDown={() =>
+            orbitControlsRef.current &&
+            (orbitControlsRef.current.enabled = false)
+          }
+          onMouseUp={() =>
+            orbitControlsRef.current &&
+            (orbitControlsRef.current.enabled = true)
+          }
+        />
       )}
     </>
   );
 }
 
 // Component สำหรับ Videos
-function VideoObject({ safe, isSelected }) {
+function VideoObject({ safe, isSelected, orbitControlsRef }) {
   const degToRad = (d) => (d * Math.PI) / 180;
   const setCurrentAssetSelect = projectStore(
     (state) => state.setCurrentAssetSelect
@@ -286,7 +319,18 @@ function VideoObject({ safe, isSelected }) {
             <meshBasicMaterial color="yellow" wireframe />
           </Box>
           {meshRef.current && (
-            <TransformControls object={meshRef.current} mode="translate" />
+            <TransformControls
+              object={meshRef.current}
+              mode="translate"
+              onMouseDown={() =>
+                orbitControlsRef.current &&
+                (orbitControlsRef.current.enabled = false)
+              }
+              onMouseUp={() =>
+                orbitControlsRef.current &&
+                (orbitControlsRef.current.enabled = true)
+              }
+            />
           )}
         </>
       )}
@@ -295,7 +339,7 @@ function VideoObject({ safe, isSelected }) {
 }
 
 // Component สำหรับ Images
-function ImageObject({ safe, isSelected }) {
+function ImageObject({ safe, isSelected, orbitControlsRef }) {
   const texture = useLoader(TextureLoader, safe.src);
   const degToRad = (d) => (d * Math.PI) / 180;
   const setCurrentAssetSelect = projectStore(
@@ -337,7 +381,18 @@ function ImageObject({ safe, isSelected }) {
             <meshBasicMaterial color="yellow" wireframe />
           </Box>
           {meshRef.current && (
-            <TransformControls object={meshRef.current} mode="translate" />
+            <TransformControls
+              object={meshRef.current}
+              mode="translate"
+              onMouseDown={() =>
+                orbitControlsRef.current &&
+                (orbitControlsRef.current.enabled = false)
+              }
+              onMouseUp={() =>
+                orbitControlsRef.current &&
+                (orbitControlsRef.current.enabled = true)
+              }
+            />
           )}
         </>
       )}
