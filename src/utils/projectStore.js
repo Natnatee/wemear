@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { v4 as uuidv4 } from "uuid";
 
 // Debounced save to localStorage
 let saveTimeout;
@@ -23,37 +24,9 @@ const loadProjectFromStorage = () => {
   }
 };
 
-const generateNewAssetId = (info) => {
-  const allAssetIds = new Set();
-
-  // Collect asset IDs from tracking_modes
-  for (const modeKey in info.tracking_modes) {
-    const mode = info.tracking_modes[modeKey];
-    if (mode.tracks) {
-      mode.tracks.forEach((track) => {
-        track.scenes.forEach((scene) => {
-          if (scene.assets) {
-            scene.assets.forEach((asset) => allAssetIds.add(asset.asset_id));
-          }
-        });
-      });
-    } else if (mode.scenes) {
-      mode.scenes.forEach((scene) => {
-        if (scene.assets) {
-          scene.assets.forEach((asset) => allAssetIds.add(asset.asset_id));
-        }
-      });
-    }
-  }
-
-  // ลบส่วนที่เกี่ยวข้องกับ shared_assets
-  // ไม่จำเป็นต้องเก็บ asset IDs จาก shared_assets อีกต่อไป
-
-  let newId = 1;
-  while (allAssetIds.has(`asset_${newId}`)) {
-    newId++;
-  }
-  return `asset_${newId}`;
+// Generate unique asset ID using UUID
+const generateNewAssetId = () => {
+  return `asset_${uuidv4()}`;
 };
 
 const projectStore = create((set, get) => ({
@@ -168,7 +141,7 @@ const projectStore = create((set, get) => ({
         return state;
       }
 
-      const newAssetId = generateNewAssetId(updatedProject.info);
+      const newAssetId = generateNewAssetId();
       const newAssetForScene = {
         asset_id: newAssetId,
         asset_name: assetData.name,
