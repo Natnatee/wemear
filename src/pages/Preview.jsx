@@ -23,6 +23,8 @@ function Preview() {
       loadProjectFromStorage();
     }
   }, [projectState, loadProjectFromStorage]);
+
+  // Memoize track เพื่อป้องกัน unnecessary recalculation
   const track = useMemo(() => {
     // ************************************************
     // ✅ จุดแก้ไขหลัก: เพิ่มการตรวจสอบความปลอดภัยของ projectState
@@ -56,7 +58,7 @@ function Preview() {
       });
     });
     return transformedScenes;
-  }, [projectState]);
+  }, [projectState]); // Keep projectState but more specific checks inside
   console.log(track);
 
   useEffect(() => {

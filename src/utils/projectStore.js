@@ -10,7 +10,7 @@ const debouncedSave = (project) => {
       localStorage.setItem("current_project", JSON.stringify(project));
       console.log("Project auto-saved to localStorage");
     }
-  }, 1000); // รอ 1 วินาทีหลังจากแก้ไขล่าสุด
+  }, 200); // ลดจาก 1000ms เป็น 200ms สำหรับ save เร็วขึ้น
 };
 
 // Load project from localStorage
@@ -31,12 +31,23 @@ const generateNewAssetId = () => {
 
 const projectStore = create((set, get) => ({
   project: null,
+  currentAssetSelect: null,
 
   setProject: (newProject) => {
     set({ project: newProject });
     if (newProject) {
       debouncedSave(newProject);
     }
+  },
+
+  // Set selected asset
+  setCurrentAssetSelect: (asset) => {
+    set({ currentAssetSelect: asset });
+  },
+
+  // Clear selected asset
+  clearCurrentAssetSelect: () => {
+    set({ currentAssetSelect: null });
   },
 
   // Load project from localStorage

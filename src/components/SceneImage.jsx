@@ -4,6 +4,7 @@ import { OrbitControls, Plane, Grid } from "@react-three/drei";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { TextureLoader, VideoTexture, DoubleSide } from "three";
 import * as THREE from "three";
+import projectStore from "../utils/projectStore";
 
 // Extend THREE namespace เพื่อรองรับ video element
 extend({ VideoTexture });
@@ -82,7 +83,11 @@ function SceneImage({ scene }) {
 
       {/* แสดงผล objects จาก scene data */}
       {scene.map((config, index) => (
-        <SceneObjectWrapper key={index} config={config} index={index} />
+        <SceneObjectWrapper
+          key={config?.asset_id || index}
+          config={config}
+          index={index}
+        />
       ))}
     </>
   );
@@ -142,6 +147,9 @@ function SceneObjectWrapper({ config, index }) {
 function Model3D({ safe }) {
   const gltf = useLoader(GLTFLoader, safe.src);
   const degToRad = (d) => (d * Math.PI) / 180;
+  const setCurrentAssetSelect = projectStore(
+    (state) => state.setCurrentAssetSelect
+  );
 
   const model = useMemo(() => {
     const clonedScene = gltf.scene.clone();
@@ -164,7 +172,10 @@ function Model3D({ safe }) {
   return (
     <primitive
       object={model}
-      onClick={() => console.log("Clicked 3D Model:", safe)}
+      onClick={() => {
+        console.log("Clicked 3D Model:", safe);
+        setCurrentAssetSelect(safe);
+      }}
     />
   );
 }
@@ -172,6 +183,9 @@ function Model3D({ safe }) {
 // Component สำหรับ Videos
 function VideoObject({ safe }) {
   const degToRad = (d) => (d * Math.PI) / 180;
+  const setCurrentAssetSelect = projectStore(
+    (state) => state.setCurrentAssetSelect
+  );
 
   const texture = useMemo(() => {
     const video = document.createElement("video");
@@ -216,7 +230,10 @@ function VideoObject({ safe }) {
         degToRad(safe.rotation.z),
       ]}
       scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-      onClick={() => console.log("Clicked Video:", safe)}
+      onClick={() => {
+        console.log("Clicked Video:", safe);
+        setCurrentAssetSelect(safe);
+      }}
     >
       <planeGeometry args={[1, 1]} />
       <meshBasicMaterial map={texture} side={DoubleSide} />
@@ -228,6 +245,9 @@ function VideoObject({ safe }) {
 function ImageObject({ safe }) {
   const texture = useLoader(TextureLoader, safe.src);
   const degToRad = (d) => (d * Math.PI) / 180;
+  const setCurrentAssetSelect = projectStore(
+    (state) => state.setCurrentAssetSelect
+  );
 
   return (
     <mesh
@@ -238,7 +258,10 @@ function ImageObject({ safe }) {
         degToRad(safe.rotation.z),
       ]}
       scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-      onClick={() => console.log("Clicked Image:", safe)}
+      onClick={() => {
+        console.log("Clicked Image:", safe);
+        setCurrentAssetSelect(safe);
+      }}
     >
       <planeGeometry args={[1, 1]} />
       <meshBasicMaterial map={texture} side={DoubleSide} />
