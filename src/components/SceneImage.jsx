@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { useThree, useLoader, extend, useFrame } from "@react-three/fiber";
+import { useThree, useLoader, extend } from "@react-three/fiber";
 import {
   OrbitControls,
   Plane,
   Grid,
-  Box,
   TransformControls,
 } from "@react-three/drei";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -185,7 +184,7 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
   const setCurrentAssetSelect = projectStore(
     (state) => state.setCurrentAssetSelect
   );
-  const modelRef = useRef();
+  const groupRef = useRef();
 
   const model = useMemo(() => {
     const clonedScene = gltf.scene.clone();
@@ -195,48 +194,51 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
         child.receiveShadow = true;
       }
     });
-    clonedScene.scale.set(safe.scale.x, safe.scale.y, safe.scale.z);
-    clonedScene.position.set(safe.position.x, safe.position.y, safe.position.z);
-    clonedScene.rotation.set(
-      degToRad(safe.rotation.x),
-      degToRad(safe.rotation.y),
-      degToRad(safe.rotation.z)
-    );
     return clonedScene;
-  }, [gltf, safe]);
+  }, [gltf]);
 
   return (
     <>
-      <group ref={modelRef}>
-        <primitive
-          object={model}
-          onClick={(e) => {
-            e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
-            console.log("Clicked 3D Model:", safe);
-            setCurrentAssetSelect(safe);
-          }}
-        />
-        {isSelected && (
-          <Box
-            position={[safe.position.x, safe.position.y, safe.position.z]}
-            scale={[safe.scale.x * 1.1, safe.scale.y * 1.1, safe.scale.z * 1.1]}
-          >
-            <meshBasicMaterial color="yellow" wireframe />
-          </Box>
-        )}
+      <group
+        ref={groupRef}
+        position={[safe.position.x, safe.position.y, safe.position.z]}
+        rotation={[
+          degToRad(safe.rotation.x),
+          degToRad(safe.rotation.y),
+          degToRad(safe.rotation.z),
+        ]}
+        scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
+        onClick={(e) => {
+          e.stopPropagation();
+          console.log("Clicked 3D Model:", safe);
+          setCurrentAssetSelect(safe);
+        }}
+      >
+        <primitive object={model} />
       </group>
-      {isSelected && modelRef.current && (
+      {isSelected && groupRef.current && (
         <TransformControls
-          object={modelRef.current}
+          object={groupRef.current}
           mode="translate"
-          onMouseDown={() =>
+          onMouseDown={() => {
+            console.log("🟡 กำลังลาก - เริ่มต้น");
+            console.log("Group position:", groupRef.current.position);
+            console.log("Model position:", model.position);
             orbitControlsRef.current &&
-            (orbitControlsRef.current.enabled = false)
-          }
-          onMouseUp={() =>
+              (orbitControlsRef.current.enabled = false);
+          }}
+          onMouseUp={() => {
+            console.log("🟢 หยุดลาก");
+            console.log("Group position:", groupRef.current.position);
+            console.log("Model position:", model.position);
             orbitControlsRef.current &&
-            (orbitControlsRef.current.enabled = true)
-          }
+              (orbitControlsRef.current.enabled = true);
+          }}
+          onChange={() => {
+            console.log("🔵 กำลังลาก...");
+            console.log("Group position:", groupRef.current.position);
+            console.log("Model position:", model.position);
+          }}
         />
       )}
     </>
@@ -250,15 +252,6 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
     (state) => state.setCurrentAssetSelect
   );
   const meshRef = useRef();
-  const boxRef = useRef();
-
-  // อัพเดท Box position/rotation ทุก frame เมื่อถูกเลือก
-  useFrame(() => {
-    if (isSelected && meshRef.current && boxRef.current) {
-      boxRef.current.position.copy(meshRef.current.position);
-      boxRef.current.rotation.copy(meshRef.current.rotation);
-    }
-  });
 
   const texture = useMemo(() => {
     const video = document.createElement("video");
@@ -296,34 +289,24 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
 
   return (
     <>
-      <group>
-        <mesh
-          ref={meshRef}
-          position={[safe.position.x, safe.position.y, safe.position.z]}
-          rotation={[
-            degToRad(safe.rotation.x),
-            degToRad(safe.rotation.y),
-            degToRad(safe.rotation.z),
-          ]}
-          scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-          onClick={(e) => {
-            e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
-            console.log("Clicked Video:", safe);
-            setCurrentAssetSelect(safe);
-          }}
-        >
-          <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial map={texture} side={DoubleSide} />
-        </mesh>
-        {isSelected && meshRef.current && (
-          <Box
-            ref={boxRef}
-            scale={[safe.scale.x * 1.1, safe.scale.y * 1.1, 0.1]}
-          >
-            <meshBasicMaterial color="yellow" wireframe />
-          </Box>
-        )}
-      </group>
+      <mesh
+        ref={meshRef}
+        position={[safe.position.x, safe.position.y, safe.position.z]}
+        rotation={[
+          degToRad(safe.rotation.x),
+          degToRad(safe.rotation.y),
+          degToRad(safe.rotation.z),
+        ]}
+        scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
+        onClick={(e) => {
+          e.stopPropagation();
+          console.log("Clicked Video:", safe);
+          setCurrentAssetSelect(safe);
+        }}
+      >
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={texture} side={DoubleSide} />
+      </mesh>
       {isSelected && meshRef.current && (
         <TransformControls
           object={meshRef.current}
@@ -350,46 +333,27 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
     (state) => state.setCurrentAssetSelect
   );
   const meshRef = useRef();
-  const boxRef = useRef();
-
-  // อัพเดท Box position/rotation ทุก frame เมื่อถูกเลือก
-  useFrame(() => {
-    if (isSelected && meshRef.current && boxRef.current) {
-      boxRef.current.position.copy(meshRef.current.position);
-      boxRef.current.rotation.copy(meshRef.current.rotation);
-    }
-  });
 
   return (
     <>
-      <group>
-        <mesh
-          ref={meshRef}
-          position={[safe.position.x, safe.position.y, safe.position.z]}
-          rotation={[
-            degToRad(safe.rotation.x),
-            degToRad(safe.rotation.y),
-            degToRad(safe.rotation.z),
-          ]}
-          scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
-          onClick={(e) => {
-            e.stopPropagation(); // ป้องกันการ propagate ไปยัง object อื่น
-            console.log("Clicked Image:", safe);
-            setCurrentAssetSelect(safe);
-          }}
-        >
-          <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial map={texture} side={DoubleSide} />
-        </mesh>
-        {isSelected && meshRef.current && (
-          <Box
-            ref={boxRef}
-            scale={[safe.scale.x * 1.1, safe.scale.y * 1.1, 0.1]}
-          >
-            <meshBasicMaterial color="yellow" wireframe />
-          </Box>
-        )}
-      </group>
+      <mesh
+        ref={meshRef}
+        position={[safe.position.x, safe.position.y, safe.position.z]}
+        rotation={[
+          degToRad(safe.rotation.x),
+          degToRad(safe.rotation.y),
+          degToRad(safe.rotation.z),
+        ]}
+        scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
+        onClick={(e) => {
+          e.stopPropagation();
+          console.log("Clicked Image:", safe);
+          setCurrentAssetSelect(safe);
+        }}
+      >
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={texture} side={DoubleSide} />
+      </mesh>
       {isSelected && meshRef.current && (
         <TransformControls
           object={meshRef.current}
