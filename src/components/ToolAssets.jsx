@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useImageAssets, getImageUrl } from "../hook/useImageAssets";
 import { useVideoAssets, getVideoUrl } from "../hook/useVideoAssets";
 import { useThreeDAssets, getThreeDUrl } from "../hook/useThreeDAssets";
 import { useNavigate } from "react-router-dom";
 import projectStore from "../utils/projectStore";
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 
 const ToolAssets = ({ currentState }) => {
   const [selectedAssetType, setSelectedAssetType] = useState(null); // เริ่มต้นยังไม่โดนกด
   const [showModal, setShowModal] = useState(false);
+  const [thumbnails, setThumbnails] = useState({});
   const navigate = useNavigate();
   const addAsset = projectStore((state) => state.addAssetToScene);
 
@@ -82,6 +86,121 @@ const ToolAssets = ({ currentState }) => {
     if (showModal) window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [showModal]);
+
+  // Generate 3D thumbnail
+  const generateThumbnailFromUrl = useCallback(async (url, fileExtension) => {
+    if (!["gltf", "glb", "obj"].includes(fileExtension)) {
+      return null;
+    }
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 200;
+      canvas.height = 200;
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xffffff);
+
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(200, 200);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 5, 5);
+      scene.add(directionalLight);
+
+      let model = null;
+
+      if (fileExtension === "gltf" || fileExtension === "glb") {
+        const loader = new GLTFLoader();
+        const gltf = await new Promise((resolve, reject) => {
+          loader.load(url, resolve, undefined, reject);
+        });
+        model = gltf.scene;
+      } else if (fileExtension === "obj") {
+        const loader = new OBJLoader();
+        model = await new Promise((resolve, reject) => {
+          loader.load(url, resolve, undefined, reject);
+        });
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshLambertMaterial({ color: 0x888888 });
+          }
+        });
+      }
+
+      if (model) {
+        scene.add(model);
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        model.position.sub(center);
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 1.5 / maxDim;
+        model.scale.setScalar(scale);
+
+        camera.position.set(2, 1, 2);
+        camera.lookAt(0, 0, 0);
+
+        renderer.render(scene, camera);
+
+        const thumbnail = canvas.toDataURL("image/png");
+        renderer.dispose();
+        return thumbnail;
+      }
+
+      renderer.dispose();
+      return null;
+    } catch (error) {
+      console.error("Error generating 3D preview:", error);
+      return null;
+    }
+  }, []);
+
+  // Generate thumbnails for 3D models
+  useEffect(() => {
+    const generateAllThumbnails = async () => {
+      if (!threeDAssetsData || threeDAssetsData.length === 0) return;
+
+      const newThumbnails = { ...thumbnails };
+      const toGenerate = [];
+
+      for (const model of threeDAssetsData) {
+        if (newThumbnails[model.id] !== undefined) continue;
+
+        const ext = model.name.split(".").pop().toLowerCase();
+        if (["gltf", "glb", "obj"].includes(ext)) {
+          toGenerate.push({ model, ext });
+          newThumbnails[model.id] = null;
+        } else {
+          newThumbnails[model.id] = null;
+        }
+      }
+
+      setThumbnails(newThumbnails);
+
+      await Promise.all(
+        toGenerate.map(async ({ model, ext }) => {
+          try {
+            const url = getThreeDUrl(model.name);
+            const thumbnail = await generateThumbnailFromUrl(url, ext);
+            setThumbnails((prev) => ({ ...prev, [model.id]: thumbnail }));
+          } catch (e) {
+            console.log(`Error generating thumbnail for ${model.name}: ${e}`);
+            setThumbnails((prev) => ({ ...prev, [model.id]: null }));
+          }
+        })
+      );
+    };
+
+    if (selectedAssetType === "3D") {
+      generateAllThumbnails();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threeDAssetsData, selectedAssetType, generateThumbnailFromUrl]);
 
   // small Modal component that renders into document.body so it is relative to the browser viewport
   const Modal = ({ open, onClose, children }) => {
@@ -210,26 +329,44 @@ const ToolAssets = ({ currentState }) => {
 
         {selectedAssetType === "3D" && threeDAssetsData && (
           <div className="grid grid-cols-4 gap-4 overflow-y-auto flex-grow">
-            {threeDAssetsData.map((model) => (
-              <div
-                key={model.id}
-                className="cursor-pointer p-2 border rounded-lg hover:shadow-md transition-shadow"
-                onClick={() => {
-                  console.log("Selected 3D Model:", model);
-                  const assetData = {
-                    ...model,
-                    src: getThreeDUrl(model.name),
-                    type: "3D Model",
-                  };
-                  addAsset(assetData, currentState);
-                }}
-              >
-                <div className="w-full h-20 bg-gray-100 rounded-md mb-2 flex items-center justify-center">
-                  <span className="text-gray-500 text-xs">📦 3D</span>
+            {threeDAssetsData.map((model) => {
+              const ext = model.name.split(".").pop().toLowerCase();
+              const isSupported = ["gltf", "glb", "obj"].includes(ext);
+              const thumbnail = thumbnails[model.id];
+
+              return (
+                <div
+                  key={model.id}
+                  className="cursor-pointer p-2 border rounded-lg hover:shadow-md transition-shadow"
+                  onClick={() => {
+                    console.log("Selected 3D Model:", model);
+                    const assetData = {
+                      ...model,
+                      src: getThreeDUrl(model.name),
+                      type: "3D Model",
+                    };
+                    addAsset(assetData, currentState);
+                  }}
+                >
+                  {!isSupported || thumbnail === null ? (
+                    <div className="w-full h-20 bg-gray-100 rounded-md mb-2 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">📦 3D</span>
+                    </div>
+                  ) : thumbnail ? (
+                    <img
+                      src={thumbnail}
+                      alt={model.name}
+                      className="w-full h-20 object-cover rounded-md mb-2"
+                    />
+                  ) : (
+                    <div className="w-full h-20 bg-gray-100 rounded-md mb-2 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-600 truncate">{model.name}</p>
                 </div>
-                <p className="text-xs text-gray-600 truncate">{model.name}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Modal>
