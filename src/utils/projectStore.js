@@ -1,25 +1,68 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
 
+// Expiration time: 24 hours in milliseconds
+const EXPIRATION_TIME = 24 * 60 * 60 * 1000;
+
 // Debounced save to localStorage
 let saveTimeout;
 const debouncedSave = (project) => {
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => {
     if (project) {
-      localStorage.setItem("current_project", JSON.stringify(project));
+      const dataWithTimestamp = {
+        project,
+        savedAt: Date.now(), // บันทึก timestamp
+      };
+      localStorage.setItem(
+        "current_project",
+        JSON.stringify(dataWithTimestamp)
+      );
       console.log("Project auto-saved to localStorage");
     }
-  }, 200); // ลดจาก 1000ms เป็น 200ms สำหรับ save เร็วขึ้น
+  }, 200);
 };
 
-// Load project from localStorage
+// Load project from localStorage with expiration check
 const loadProjectFromStorage = () => {
   try {
     const stored = localStorage.getItem("current_project");
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+
+    const data = JSON.parse(stored);
+
+    // Check for old data structure (before migration)
+    // If old keys exist (name, image, date), clear cache
+    if (data.name || data.image || data.date) {
+      console.warn("🗑️ Old cache structure detected, clearing...");
+      localStorage.removeItem("current_project");
+      return null;
+    }
+
+    // Support old format (direct project object without timestamp)
+    if (!data.savedAt) {
+      console.warn("⚠️ Old cache format detected (no timestamp), clearing...");
+      localStorage.removeItem("current_project");
+      return null;
+    }
+
+    // Check if cache has expired (older than 24 hours)
+    const age = Date.now() - data.savedAt;
+    if (age > EXPIRATION_TIME) {
+      console.log(
+        "🕐 Cache expired (age: " +
+          Math.round(age / 1000 / 60 / 60) +
+          "h), removing..."
+      );
+      localStorage.removeItem("current_project");
+      return null;
+    }
+
+    console.log("✅ Cache valid (age: " + Math.round(age / 1000 / 60) + "m)");
+    return data.project;
   } catch (error) {
     console.error("Error loading project from localStorage:", error);
+    localStorage.removeItem("current_project"); // Clean up corrupted data
     return null;
   }
 };
@@ -88,7 +131,14 @@ const projectStore = create((set, get) => ({
     const { project } = get();
     if (project) {
       clearTimeout(saveTimeout);
-      localStorage.setItem("current_project", JSON.stringify(project));
+      const dataWithTimestamp = {
+        project,
+        savedAt: Date.now(),
+      };
+      localStorage.setItem(
+        "current_project",
+        JSON.stringify(dataWithTimestamp)
+      );
       console.log("Project manually saved to localStorage");
     }
   },
