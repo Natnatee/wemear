@@ -69,7 +69,7 @@ const projectStore = create((set, get) => ({
 
   setProjectName: (name) => {
     set((state) => {
-      const updatedProject = { ...state.project, name };
+      const updatedProject = { ...state.project, project_name: name };
       debouncedSave(updatedProject);
       return { project: updatedProject };
     });

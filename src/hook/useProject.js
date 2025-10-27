@@ -65,8 +65,8 @@ export const useUpdateProject = () => {
     async (project) => {
       const updateData = {
         p_project_id: project.project_id,
-        p_project_name: project.name || null,
-        p_project_image: project.image || null,
+        p_project_name: project.project_name || null,
+        p_project_image: project.project_image || null,
         p_label: project.label || null,
         p_owner: project.owner || null,
         p_status: project.status || null,

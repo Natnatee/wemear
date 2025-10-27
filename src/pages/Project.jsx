@@ -54,28 +54,23 @@ function Project() {
         );
 
         if (response.data && response.data.length > 0) {
-          const apiData = response.data[0];
+          const projectData = response.data[0];
 
-          // แปลง API response ให้ตรงกับ structure ที่ใช้
-          const projectData = {
-            project_id: apiData.project_id,
-            image: apiData.project_image,
-            name: apiData.project_name,
-            label: apiData.label,
-            owner: apiData.owner,
-            date: new Date(apiData.created_at).toLocaleDateString("th-TH"),
-            status: apiData.status,
-            tool: Array.isArray(apiData.tool)
-              ? apiData.tool.join(", ")
-              : apiData.tool,
-            link: apiData.link,
-            info: apiData.project_info?.info || {
+          // ใช้ข้อมูลจาก API โดยตรง ไม่แปลง key
+          // จัดการ tool ให้เป็น string และ info structure
+          const normalizedProject = {
+            ...projectData,
+            tool: Array.isArray(projectData.tool)
+              ? projectData.tool.join(", ")
+              : projectData.tool,
+            info: projectData.project_info?.info || {
               tracking_modes: {},
               shared_assets: [],
             },
           };
 
-          setProject(projectData);
+          setProject(normalizedProject);
+          console.log("Loaded project from API:", normalizedProject);
         } else {
           setError("ไม่พบโปรเจคที่คุณกำลังมองหา");
         }
@@ -183,8 +178,8 @@ function Project() {
             {/* ซ้าย - รูปภาพ */}
             <div className="lg:w-1/2 flex items-center justify-center relative">
               <img
-                src={project.image}
-                alt={project.name}
+                src={project.project_image}
+                alt={project.project_name}
                 className="w-full h-64 lg:h-80 object-cover rounded-lg shadow-md"
               />
               {/* ปุ่มแก้ไขรูปภาพ - ลอยมุมขวาล่าง */}
@@ -229,7 +224,7 @@ function Project() {
                     </span>
                     <input
                       type="text"
-                      value={project.name ?? ""}
+                      value={project.project_name ?? ""}
                       onChange={(e) => handleProjectNameChange(e.target.value)}
                       className="ml-2 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="ใส่ชื่อโปรเจค"
@@ -253,7 +248,9 @@ function Project() {
                     <span className="font-medium text-gray-700">
                       วันที่สร้าง:
                     </span>
-                    <span className="ml-2">{project.date}</span>
+                    <span className="ml-2">
+                      {new Date(project.created_at).toLocaleDateString("th-TH")}
+                    </span>
                   </div>
                   <div>
                     <span className="font-medium text-gray-700">สถานะ:</span>
