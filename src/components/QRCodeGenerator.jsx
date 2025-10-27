@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import QRCodeLib from 'qrcode';
-import { saveAs } from 'file-saver';
+import React, { useState } from "react";
+import QRCodeLib from "qrcode";
+import { saveAs } from "file-saver";
 
 const QRCodeGenerator = ({ link }) => {
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateQRCode = async () => {
@@ -11,17 +11,23 @@ const QRCodeGenerator = ({ link }) => {
 
     setIsGenerating(true);
     try {
-      const dataUrl = await QRCodeLib.toDataURL(link, {
+      // Add https:// if the link doesn't have a protocol
+      let formattedLink = link.trim();
+      if (!formattedLink.match(/^https?:\/\//i)) {
+        formattedLink = "https://" + formattedLink;
+      }
+
+      const dataUrl = await QRCodeLib.toDataURL(formattedLink, {
         width: 200,
         margin: 2,
         color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
       });
       setQrCodeDataUrl(dataUrl);
     } catch (error) {
-      console.error('Error generating QR code:', error);
+      console.error("Error generating QR code:", error);
     } finally {
       setIsGenerating(false);
     }
@@ -39,6 +45,7 @@ const QRCodeGenerator = ({ link }) => {
     if (link) {
       generateQRCode();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [link]);
 
   if (!link) {
@@ -70,9 +77,7 @@ const QRCodeGenerator = ({ link }) => {
       <div className="flex-1 min-w-0">
         <div className="bg-gray-50 p-3 rounded-lg h-full flex flex-col justify-between">
           <div className="mb-2">
-            <p className="text-sm text-gray-600 break-all">
-              {link}
-            </p>
+            <p className="text-sm text-gray-600 break-all">{link}</p>
           </div>
           <div className="flex justify-end">
             <button
