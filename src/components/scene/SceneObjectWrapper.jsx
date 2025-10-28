@@ -65,17 +65,31 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
         }}
       />
       {isSelected && groupRef.current && (
-        <TransformControls
-          object={groupRef.current}
-          mode="translate"
-          onMouseDown={() => {
-            console.log("🟡 กำลังลาก - เริ่มต้น");
-            if (orbitControlsRef.current) {
-              orbitControlsRef.current.enabled = false;
-            }
-          }}
-          onMouseUp={handleTransformEnd}
-        />
+        <>
+          <TransformControls
+            object={groupRef.current}
+            mode="translate"
+            onMouseDown={() => {
+              console.log("🟡 กำลังลาก - เริ่มต้น");
+              if (orbitControlsRef.current) {
+                orbitControlsRef.current.enabled = false;
+              }
+            }}
+            onMouseUp={handleTransformEnd}
+          />
+          <TransformControls
+            object={groupRef.current}
+            mode="rotate"
+            size={0.5}
+            onMouseDown={() => {
+              console.log("🔄 กำลังหมุน - เริ่มต้น");
+              if (orbitControlsRef.current) {
+                orbitControlsRef.current.enabled = false;
+              }
+            }}
+            onMouseUp={handleTransformEnd}
+          />
+        </>
       )}
     </>
   );
@@ -131,16 +145,29 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
         <meshBasicMaterial map={texture} side={DoubleSide} />
       </mesh>
       {isSelected && meshRef.current && (
-        <TransformControls
-          object={meshRef.current}
-          mode="translate"
-          onMouseDown={() => {
-            if (orbitControlsRef.current) {
-              orbitControlsRef.current.enabled = false;
-            }
-          }}
-          onMouseUp={handleTransformEnd}
-        />
+        <>
+          <TransformControls
+            object={meshRef.current}
+            mode="translate"
+            onMouseDown={() => {
+              if (orbitControlsRef.current) {
+                orbitControlsRef.current.enabled = false;
+              }
+            }}
+            onMouseUp={handleTransformEnd}
+          />
+          <TransformControls
+            object={meshRef.current}
+            mode="rotate"
+            size={0.5}
+            onMouseDown={() => {
+              if (orbitControlsRef.current) {
+                orbitControlsRef.current.enabled = false;
+              }
+            }}
+            onMouseUp={handleTransformEnd}
+          />
+        </>
       )}
     </>
   );
@@ -192,16 +219,29 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
         <meshBasicMaterial map={texture} side={DoubleSide} />
       </mesh>
       {isSelected && meshRef.current && (
-        <TransformControls
-          object={meshRef.current}
-          mode="translate"
-          onMouseDown={() => {
-            if (orbitControlsRef.current) {
-              orbitControlsRef.current.enabled = false;
-            }
-          }}
-          onMouseUp={handleTransformEnd}
-        />
+        <>
+          <TransformControls
+            object={meshRef.current}
+            mode="translate"
+            onMouseDown={() => {
+              if (orbitControlsRef.current) {
+                orbitControlsRef.current.enabled = false;
+              }
+            }}
+            onMouseUp={handleTransformEnd}
+          />
+          <TransformControls
+            object={meshRef.current}
+            mode="rotate"
+            size={0.5}
+            onMouseDown={() => {
+              if (orbitControlsRef.current) {
+                orbitControlsRef.current.enabled = false;
+              }
+            }}
+            onMouseUp={handleTransformEnd}
+          />
+        </>
       )}
     </>
   );
