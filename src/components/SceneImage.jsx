@@ -4,7 +4,7 @@ import { OrbitControls, Plane, Grid } from "@react-three/drei";
 import { VideoTexture } from "three";
 import * as THREE from "three";
 import projectStore from "../utils/projectStore";
-import { createSceneLights } from "../utils/threeHelpers";
+import { createSceneLights } from "../utils/sceneHelpers";
 import SceneObjectWrapper from "./scene/SceneObjectWrapper";
 
 // Extend THREE namespace เพื่อรองรับ video element
