@@ -295,6 +295,77 @@ const projectStore = create((set, get) => ({
       return { project: updatedProject };
     });
   },
+
+  // Remove asset from scene
+  removeAssetFromScene: (assetId) => {
+    set((state) => {
+      const currentProject = state.project;
+      if (!currentProject) {
+        console.error("No project loaded.");
+        return state;
+      }
+
+      const updatedProject = JSON.parse(JSON.stringify(currentProject));
+      let assetRemoved = false;
+
+      // ค้นหาและลบ asset ในทุก tracking mode
+      const trackingModes = updatedProject.info.tracking_modes;
+
+      for (const modeKey in trackingModes) {
+        const mode = trackingModes[modeKey];
+
+        // สำหรับ image tracking (มี tracks)
+        if (mode.tracks) {
+          for (const track of mode.tracks) {
+            for (const scene of track.scenes) {
+              if (scene.assets) {
+                const assetIndex = scene.assets.findIndex(
+                  (a) => a.asset_id === assetId
+                );
+                if (assetIndex !== -1) {
+                  scene.assets.splice(assetIndex, 1);
+                  assetRemoved = true;
+                  break;
+                }
+              }
+            }
+            if (assetRemoved) break;
+          }
+        }
+
+        // สำหรับ face/world tracking (มี scenes โดยตรง)
+        if (mode.scenes && !assetRemoved) {
+          for (const scene of mode.scenes) {
+            if (scene.assets) {
+              const assetIndex = scene.assets.findIndex(
+                (a) => a.asset_id === assetId
+              );
+              if (assetIndex !== -1) {
+                scene.assets.splice(assetIndex, 1);
+                assetRemoved = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (assetRemoved) break;
+      }
+
+      if (assetRemoved) {
+        console.log("✅ Asset removed:", assetId);
+        debouncedSave(updatedProject);
+        // Clear selection if deleted asset was selected
+        if (state.currentAssetSelect?.asset_id === assetId) {
+          set({ currentAssetSelect: null });
+        }
+        return { project: updatedProject };
+      } else {
+        console.warn("⚠️ Asset not found for removal:", assetId);
+        return state;
+      }
+    });
+  },
 }));
 
 export default projectStore;

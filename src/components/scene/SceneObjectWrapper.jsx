@@ -1,6 +1,6 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState } from "react";
 import { useLoader } from "@react-three/fiber";
-import { TransformControls } from "@react-three/drei";
+import { TransformControls, Html } from "@react-three/drei";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { VideoTexture, TextureLoader, DoubleSide } from "three";
 import projectStore from "../../utils/projectStore";
@@ -13,6 +13,71 @@ import {
 } from "../../utils/sceneHelpers";
 
 /**
+ * Component สำหรับปุ่มลบ (กากบาท) ที่มุมบนขวา
+ */
+function DeleteButton({ position, onDelete }) {
+  const [showModal, setShowModal] = useState(false);
+
+  return (
+    <>
+      <Html position={position}>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowModal(true);
+          }}
+          className="bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer"
+          style={{ transform: "translate(50%, -50%)" }}
+        >
+          ✕
+        </button>
+      </Html>
+
+      {showModal && (
+        <Html>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowModal(false);
+            }}
+          >
+            <div
+              className="bg-white rounded-lg p-6 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold mb-4">ยืนยันการลบ</h3>
+              <p className="mb-6">คุณต้องการลบวัตถุนี้หรือไม่?</p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowModal(false);
+                  }}
+                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                    setShowModal(false);
+                  }}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+                >
+                  ลบ
+                </button>
+              </div>
+            </div>
+          </div>
+        </Html>
+      )}
+    </>
+  );
+}
+
+/**
  * Component สำหรับแสดง 3D Models
  */
 function Model3D({ safe, isSelected, orbitControlsRef }) {
@@ -22,6 +87,9 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
   );
   const updateAssetTransform = projectStore(
     (state) => state.updateAssetTransform
+  );
+  const removeAssetFromScene = projectStore(
+    (state) => state.removeAssetFromScene
   );
   const groupRef = useRef();
 
@@ -66,6 +134,14 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
       />
       {isSelected && groupRef.current && (
         <>
+          <DeleteButton
+            position={[
+              safe.position.x + safe.scale.x * 0.5,
+              safe.position.y + safe.scale.y * 0.5,
+              safe.position.z,
+            ]}
+            onDelete={() => removeAssetFromScene(safe.asset_id)}
+          />
           <TransformControls
             object={groupRef.current}
             mode="translate"
@@ -104,6 +180,9 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
   );
   const updateAssetTransform = projectStore(
     (state) => state.updateAssetTransform
+  );
+  const removeAssetFromScene = projectStore(
+    (state) => state.removeAssetFromScene
   );
   const meshRef = useRef();
 
@@ -146,6 +225,14 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
       </mesh>
       {isSelected && meshRef.current && (
         <>
+          <DeleteButton
+            position={[
+              safe.position.x + safe.scale.x * 0.5,
+              safe.position.y + safe.scale.y * 0.5,
+              safe.position.z,
+            ]}
+            onDelete={() => removeAssetFromScene(safe.asset_id)}
+          />
           <TransformControls
             object={meshRef.current}
             mode="translate"
@@ -184,6 +271,9 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
   const updateAssetTransform = projectStore(
     (state) => state.updateAssetTransform
   );
+  const removeAssetFromScene = projectStore(
+    (state) => state.removeAssetFromScene
+  );
   const meshRef = useRef();
 
   const handleTransformEnd = () => {
@@ -220,6 +310,14 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
       </mesh>
       {isSelected && meshRef.current && (
         <>
+          <DeleteButton
+            position={[
+              safe.position.x + safe.scale.x * 0.5,
+              safe.position.y + safe.scale.y * 0.5,
+              safe.position.z,
+            ]}
+            onDelete={() => removeAssetFromScene(safe.asset_id)}
+          />
           <TransformControls
             object={meshRef.current}
             mode="translate"
