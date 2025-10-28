@@ -91,6 +91,9 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
   const removeAssetFromScene = projectStore(
     (state) => state.removeAssetFromScene
   );
+  const clearCurrentAssetSelect = projectStore(
+    (state) => state.clearCurrentAssetSelect
+  );
   const groupRef = useRef();
 
   const model = useMemo(() => {
@@ -112,6 +115,9 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
     if (orbitControlsRef.current) {
       orbitControlsRef.current.enabled = true;
     }
+
+    // Clear selection หลังจากลาก/หมุนเสร็จ
+    clearCurrentAssetSelect();
   };
 
   return (
@@ -184,6 +190,9 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
   const removeAssetFromScene = projectStore(
     (state) => state.removeAssetFromScene
   );
+  const clearCurrentAssetSelect = projectStore(
+    (state) => state.clearCurrentAssetSelect
+  );
   const meshRef = useRef();
 
   const texture = useMemo(() => {
@@ -201,6 +210,9 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
     if (orbitControlsRef.current) {
       orbitControlsRef.current.enabled = true;
     }
+
+    // Clear selection หลังจากลาก/หมุนเสร็จ
+    clearCurrentAssetSelect();
   };
 
   return (
@@ -274,6 +286,9 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
   const removeAssetFromScene = projectStore(
     (state) => state.removeAssetFromScene
   );
+  const clearCurrentAssetSelect = projectStore(
+    (state) => state.clearCurrentAssetSelect
+  );
   const meshRef = useRef();
 
   const handleTransformEnd = () => {
@@ -286,6 +301,9 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
     if (orbitControlsRef.current) {
       orbitControlsRef.current.enabled = true;
     }
+
+    // Clear selection หลังจากลาก/หมุนเสร็จ
+    clearCurrentAssetSelect();
   };
 
   return (
