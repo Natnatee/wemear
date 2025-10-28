@@ -5,7 +5,6 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { VideoTexture, TextureLoader, DoubleSide } from "three";
 import projectStore from "../../utils/projectStore";
 import {
-  degToRad,
   createTransformUpdate,
   parseSafeConfig,
   setupModel,
@@ -126,11 +125,7 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
         ref={groupRef}
         object={model}
         position={[safe.position.x, safe.position.y, safe.position.z]}
-        rotation={[
-          degToRad(safe.rotation.x),
-          degToRad(safe.rotation.y),
-          degToRad(safe.rotation.z),
-        ]}
+        rotation={[safe.rotation.x, safe.rotation.y, safe.rotation.z]} // ใช้ radians ตรงๆ
         scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
         onClick={(e) => {
           e.stopPropagation();
@@ -220,11 +215,7 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
       <mesh
         ref={meshRef}
         position={[safe.position.x, safe.position.y, safe.position.z]}
-        rotation={[
-          degToRad(safe.rotation.x),
-          degToRad(safe.rotation.y),
-          degToRad(safe.rotation.z),
-        ]}
+        rotation={[safe.rotation.x, safe.rotation.y, safe.rotation.z]} // ใช้ radians ตรงๆ
         scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
         onClick={(e) => {
           e.stopPropagation();
@@ -311,11 +302,7 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
       <mesh
         ref={meshRef}
         position={[safe.position.x, safe.position.y, safe.position.z]}
-        rotation={[
-          degToRad(safe.rotation.x),
-          degToRad(safe.rotation.y),
-          degToRad(safe.rotation.z),
-        ]}
+        rotation={[safe.rotation.x, safe.rotation.y, safe.rotation.z]} // ใช้ radians ตรงๆ
         scale={[safe.scale.x, safe.scale.y, safe.scale.z]}
         onClick={(e) => {
           e.stopPropagation();

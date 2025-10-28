@@ -73,11 +73,7 @@ export const parseSafeConfig = (config) => {
 export const createTransformUpdate = (position, rotation, scale) => {
   return {
     position: [position.x, position.y, position.z],
-    rotation: [
-      radToDeg(rotation.x),
-      radToDeg(rotation.y),
-      radToDeg(rotation.z),
-    ],
+    rotation: [rotation.x, rotation.y, rotation.z], // เก็บเป็น radians (Three.js format)
     scale: [scale.x, scale.y, scale.z],
   };
 };
