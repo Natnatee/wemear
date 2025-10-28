@@ -113,7 +113,13 @@ function SceneImage({ scene }) {
 function SceneObjectWrapper({ config, index, isSelected, orbitControlsRef }) {
   const safe = useMemo(() => {
     const def = { x: 0, y: 0.05, z: 0 };
-    const defScale = { x: 1, y: 1, z: 1 };
+    // ใช้ default scale เหมือน reference: 3D Model = 0.1, อื่นๆ = 1
+    const defaultScaleValue = config?.type === "3D Model" ? 0.1 : 1;
+    const defScale = {
+      x: defaultScaleValue,
+      y: defaultScaleValue,
+      z: defaultScaleValue,
+    };
     const defRotation = { x: 0, y: 0, z: 0 };
 
     return {
@@ -192,20 +198,24 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
   const groupRef = useRef();
 
   const model = useMemo(() => {
-    const clonedScene = gltf.scene.clone();
-    clonedScene.traverse((child) => {
+    // ใช้ gltf.scene โดยตรง ไม่ clone (เหมือน reference)
+    const scene = gltf.scene;
+    scene.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
     });
-    return clonedScene;
+    console.log("🎯 Model loaded - Original position:", scene.position);
+    return scene;
   }, [gltf]);
 
   return (
     <>
-      <group
+      {/* ใช้ primitive โดยตรง เหมือน reference code */}
+      <primitive
         ref={groupRef}
+        object={model}
         position={[safe.position.x, safe.position.y, safe.position.z]}
         rotation={[
           degToRad(safe.rotation.x),
@@ -218,17 +228,13 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
           console.log("Clicked 3D Model:", safe);
           setCurrentAssetSelect(safe);
         }}
-      >
-        <primitive object={model} />
-      </group>
+      />
       {isSelected && groupRef.current && (
         <TransformControls
           object={groupRef.current}
           mode="translate"
           onMouseDown={() => {
             console.log("🟡 กำลังลาก - เริ่มต้น");
-            console.log("Group position:", groupRef.current.position);
-            console.log("Model position:", model.position);
             orbitControlsRef.current &&
               (orbitControlsRef.current.enabled = false);
           }}
@@ -238,8 +244,7 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
             const rot = groupRef.current.rotation;
             const scale = groupRef.current.scale;
 
-            console.log("Group position:", pos);
-            console.log("Model position:", model.position);
+            console.log("🎯 New position:", [pos.x, pos.y, pos.z]);
 
             // บันทึกค่าใหม่ลง projectStore
             updateAssetTransform(safe.asset_id, {
