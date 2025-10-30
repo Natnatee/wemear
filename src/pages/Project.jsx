@@ -7,6 +7,7 @@ import SectionSceneImage from "../components/SectionSceneImage";
 import projectStore from "../utils/projectStore.js";
 import axiosInstance from "../utils/axios";
 import { useUpdateProject } from "../hook/useProject";
+import { useCreateShareProjectAsset } from "../hook/useShareProjectAssets";
 
 function Project() {
   const { id } = useParams();
@@ -25,9 +26,10 @@ function Project() {
   const saveProject = projectStore((state) => state.saveProject);
 
   const updateProjectMutation = useUpdateProject();
+  const createShareAssetMutation = useCreateShareProjectAsset();
 
-  // ฟังชั่นสำหรับหา src ที่ไม่ซ้ำกันทั้งหมดใน project
-  const logUniqueSrcs = () => {
+  // ฟังชั่นสำหรับหา src ที่ไม่ซ้ำกันทั้งหมดใน project และส่งไป share
+  const shareUniqueSrcs = async () => {
     const uniqueSrcs = new Set();
 
     // ตรวจสอบ project.info.tracking_modes
@@ -60,10 +62,31 @@ function Project() {
       });
     }
 
-    // แปลง Set เป็น Array และ console.log
+    // แปลง Set เป็น Array
     const uniqueSrcsArray = Array.from(uniqueSrcs);
-    console.log("🔍 Unique SRCs found in project:", uniqueSrcsArray);
-    console.log(`📊 Total unique SRCs: ${uniqueSrcsArray.length}`);
+    console.log("🔍 Sharing unique SRCs:", uniqueSrcsArray);
+    console.log(`📊 Total unique SRCs to share: ${uniqueSrcsArray.length}`);
+
+    if (uniqueSrcsArray.length === 0) {
+      console.log("⚠️ ไม่พบ assets ที่จะ share");
+      return;
+    }
+
+    try {
+      // วนลูบส่งไป share แต่ละ src
+      const promises = uniqueSrcsArray.map((src) =>
+        createShareAssetMutation.mutateAsync({
+          project_id: project.project_id,
+          assets_src: src,
+          project_name: project.project_name,
+        })
+      );
+
+      await Promise.all(promises);
+      console.log(`✅ Share สำเร็จ ${uniqueSrcsArray.length} assets`);
+    } catch (error) {
+      console.error("❌ Error sharing assets:", error);
+    }
 
     return uniqueSrcsArray;
   };
@@ -325,12 +348,14 @@ function Project() {
               onClick={() => {
                 saveProject(); // Save ก่อน deploy
                 console.log(project);
-                logUniqueSrcs(); // เรียกฟังชั่นหา unique src แทน deploy
+                shareUniqueSrcs(); // เรียกฟังชั่น share unique src แทน deploy
                 updateProjectMutation.mutate(project);
               }}
               disabled={updateProjectMutation.isLoading}
             >
-              {updateProjectMutation.isLoading ? "กำลัง Deploy..." : "Deploy"}
+              {updateProjectMutation.isLoading
+                ? "กำลัง Deploy..."
+                : "Deploy"}
             </button>
             {updateProjectMutation.isSuccess && (
               <div className="mt-2 text-green-600 text-sm">Deploy สำเร็จ!</div>
