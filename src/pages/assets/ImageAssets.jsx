@@ -1,15 +1,34 @@
 import React, { useState, useCallback } from "react";
-import { Image, Upload, Download, Scissors, FileText, Trash2 } from "lucide-react";
+import {
+  Image,
+  Upload,
+  Download,
+  Scissors,
+  FileText,
+  Trash2,
+} from "lucide-react";
 import NavbarWithSidebar from "../../components/NavbarWithSidebar";
-import { useImageAssets, useUploadImage, useDeleteImage, getImageUrl } from "../../hook/useImageAssets";
+import {
+  useImageAssets,
+  useUploadImage,
+  useDeleteImage,
+  getImageUrl,
+} from "../../hook/useImageAssets";
+import { useShareProjectAssets } from "../../hook/useShareProjectAssets";
 import { useDropzone } from "react-dropzone";
 
 export default function ImageAssets() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [fileName, setFileName] = useState("");
   const [draggedFile, setDraggedFile] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    imageName: null,
+    usedInProjects: [],
+  });
 
   const { data: images, isLoading, error } = useImageAssets();
+  const { data: shareProjectAssets } = useShareProjectAssets();
   const uploadMutation = useUploadImage();
   const deleteMutation = useDeleteImage();
 
@@ -26,9 +45,9 @@ export default function ImageAssets() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
+      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
     },
-    multiple: false
+    multiple: false,
   });
 
   // Handle upload
@@ -38,13 +57,15 @@ export default function ImageAssets() {
       return;
     }
 
-    const fileExtension = draggedFile.name.split('.').pop();
-    const finalFileName = fileName.includes('.') ? fileName : `${fileName}.${fileExtension}`;
+    const fileExtension = draggedFile.name.split(".").pop();
+    const finalFileName = fileName.includes(".")
+      ? fileName
+      : `${fileName}.${fileExtension}`;
 
     try {
       await uploadMutation.mutateAsync({
         file: draggedFile,
-        fileName: finalFileName
+        fileName: finalFileName,
       });
 
       // Reset form
@@ -61,7 +82,7 @@ export default function ImageAssets() {
   // Handle download
   const handleDownload = (imageName) => {
     const url = getImageUrl(imageName);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = imageName;
     document.body.appendChild(link);
@@ -71,14 +92,42 @@ export default function ImageAssets() {
 
   // Handle delete
   const handleDelete = async (imageName) => {
-    if (window.confirm(`คุณต้องการลบ ${imageName} ใช่หรือไม่?`)) {
-      try {
-        await deleteMutation.mutateAsync(imageName);
-        alert("ลบไฟล์สำเร็จ!");
-      } catch (error) {
-        console.error("Delete error:", error);
-        alert("เกิดข้อผิดพลาดในการลบไฟล์");
+    // ตรวจสอบว่า image นี้ถูกใช้ใน project ไหนบ้าง
+    const usedInProjects =
+      shareProjectAssets?.filter((asset) =>
+        asset.assets_src.includes(imageName)
+      ) || [];
+
+    if (usedInProjects.length > 0) {
+      // แสดง modal ถ้ามี project ที่ใช้รูปนี้
+      setDeleteModal({
+        isOpen: true,
+        imageName,
+        usedInProjects,
+      });
+    } else {
+      // ถ้าไม่มี project ไหนใช้ ลบได้เลย
+      if (window.confirm(`คุณต้องการลบ ${imageName} ใช่หรือไม่?`)) {
+        try {
+          await deleteMutation.mutateAsync(imageName);
+          alert("ลบไฟล์สำเร็จ!");
+        } catch (error) {
+          console.error("Delete error:", error);
+          alert("เกิดข้อผิดพลาดในการลบไฟล์");
+        }
       }
+    }
+  };
+
+  // ยืนยันลบ (หลังจากแสดง modal)
+  const confirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(deleteModal.imageName);
+      alert("ลบไฟล์สำเร็จ!");
+      setDeleteModal({ isOpen: false, imageName: null, usedInProjects: [] });
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("เกิดข้อผิดพลาดในการลบไฟล์");
     }
   };
 
@@ -107,14 +156,17 @@ export default function ImageAssets() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Left - Drag and Drop */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Image</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Upload Image
+              </h3>
 
               <div
                 {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${isDragActive
-                  ? 'border-blue-400 bg-blue-50'
-                  : 'border-gray-300 hover:border-gray-400'
-                  }`}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  isDragActive
+                    ? "border-blue-400 bg-blue-50"
+                    : "border-gray-300 hover:border-gray-400"
+                }`}
               >
                 <input {...getInputProps()} />
                 {selectedImage ? (
@@ -124,9 +176,7 @@ export default function ImageAssets() {
                       alt="Preview"
                       className="max-h-48 mx-auto rounded-lg shadow-sm"
                     />
-                    <p className="text-sm text-gray-600">
-                      {draggedFile?.name}
-                    </p>
+                    <p className="text-sm text-gray-600">{draggedFile?.name}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -135,7 +185,9 @@ export default function ImageAssets() {
                     </div>
                     <div>
                       <p className="text-lg font-medium text-gray-900">
-                        {isDragActive ? 'วางไฟล์ที่นี่...' : 'ลากไฟล์มาวางที่นี่'}
+                        {isDragActive
+                          ? "วางไฟล์ที่นี่..."
+                          : "ลากไฟล์มาวางที่นี่"}
                       </p>
                       <p className="text-sm text-gray-500">
                         หรือคลิกเพื่อเลือกไฟล์ (JPG, PNG, GIF, WebP)
@@ -148,7 +200,9 @@ export default function ImageAssets() {
 
             {/* Right - Tools */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Tools</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Tools
+              </h3>
 
               <div className="space-y-4">
                 {/* File Name Input */}
@@ -183,7 +237,7 @@ export default function ImageAssets() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                   >
                     <Upload size={16} />
-                    {uploadMutation.isLoading ? 'กำลังอัพโหลด...' : 'อัพโหลด'}
+                    {uploadMutation.isLoading ? "กำลังอัพโหลด..." : "อัพโหลด"}
                   </button>
                 </div>
               </div>
@@ -193,7 +247,9 @@ export default function ImageAssets() {
           {/* Bottom Block - Image Gallery */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">รูปภาพทั้งหมด</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                รูปภาพทั้งหมด
+              </h3>
               <span className="text-sm text-gray-500">
                 {images?.length || 0} ไฟล์
               </span>
@@ -223,7 +279,10 @@ export default function ImageAssets() {
 
                     {/* Image Info */}
                     <div className="mt-2">
-                      <p className="text-xs text-gray-600 truncate" title={image.name}>
+                      <p
+                        className="text-xs text-gray-600 truncate"
+                        title={image.name}
+                      >
                         {image.name}
                       </p>
                       <p className="text-xs text-gray-400">
@@ -260,12 +319,78 @@ export default function ImageAssets() {
                   <Image size={24} className="text-gray-400" />
                 </div>
                 <p className="text-gray-500">ยังไม่มีรูปภาพ</p>
-                <p className="text-sm text-gray-400">เริ่มต้นด้วยการอัพโหลดรูปภาพแรกของคุณ</p>
+                <p className="text-sm text-gray-400">
+                  เริ่มต้นด้วยการอัพโหลดรูปภาพแรกของคุณ
+                </p>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 size={20} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  ยืนยันการลบ
+                </h3>
+                <p className="text-sm text-gray-600">
+                  ไฟล์นี้ถูกใช้ในโปรเจคต่อไปนี้
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  โปรเจคที่ใช้ไฟล์นี้:
+                </h4>
+                <div className="space-y-2">
+                  {deleteModal.usedInProjects.map((project, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-gray-700">
+                        {project.project_name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() =>
+                  setDeleteModal({
+                    isOpen: false,
+                    imageName: null,
+                    usedInProjects: [],
+                  })
+                }
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteMutation.isLoading}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {deleteMutation.isLoading ? "กำลังลบ..." : "ลบไฟล์"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
