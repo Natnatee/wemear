@@ -70,7 +70,7 @@ const ModalImageUpdate = ({ isOpen, onClose, projectId }) => {
         if (project) {
           const updatedProject = {
             ...project,
-            image: imageUrl,
+            project_image: imageUrl,
           };
           setProject(updatedProject);
         }
