@@ -2,24 +2,23 @@ function ProjectUi() {
   return (
     <div className="h-full flex gap-6 overflow-hidden">
       {/* ส่วนซ้าย - แสดงโทรศัพท์ */}
-      <div className="w-1/3 flex flex-col items-center overflow-hidden">
-        <h3 className="text-sm font-semibold mb-4">Project preloader</h3>
-        <p className="text-xs text-gray-500 mb-4">
-          Add your unique project upload
-        </p>
+      <div className="w-1/3 flex flex-col items-center justify-center overflow-hidden">
+        <h3 className="text-lg font-semibold mb-6">Project preloader</h3>
 
-        {/* Phone mockup */}
-        <div className="relative w-48 h-96 bg-black rounded-3xl border-8 border-gray-800 shadow-xl">
-          {/* Phone notch */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl"></div>
-
-          {/* Phone screen */}
-          <div className="absolute inset-2 bg-white rounded-2xl overflow-hidden flex items-center justify-center">
-            <p className="text-gray-400 text-xs">Preview Screen</p>
+        {/* Phone mockup - Modern iPhone style */}
+        <div className="relative w-52 h-[550px] bg-gradient-to-br from-gray-900 to-black rounded-[3rem] p-3 shadow-2xl">
+          {/* Phone notch - sleeker design */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-4 bg-black rounded-b-3xl z-10 flex items-center justify-center">
+            <div className="w-20 h-1 bg-gray-800 rounded-full mt-2"></div>
           </div>
 
-          {/* Home indicator */}
-          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gray-600 rounded-full"></div>
+          {/* Phone screen - clean white background */}
+          <div className="relative w-full h-full bg-white rounded-[2rem] overflow-hidden shadow-inner flex flex-col items-center justify-center">
+            <p className="text-gray-300 text-sm font-light">Preview Screen</p>
+          </div>
+
+          {/* Home indicator - iOS style */}
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1.5 bg-gray-700 rounded-full"></div>
         </div>
       </div>
 
