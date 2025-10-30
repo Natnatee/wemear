@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState, Component } from "react";
 import { useLoader } from "@react-three/fiber";
 import { TransformControls, Html } from "@react-three/drei";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -10,6 +10,31 @@ import {
   setupModel,
   createVideoElement,
 } from "../../utils/sceneHelpers";
+
+/**
+ * Error Boundary สำหรับจับ error ตอนโหลด assets
+ */
+class AssetErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Asset loading error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null; // ไม่แสดงอะไรถ้า error
+    }
+    return this.props.children;
+  }
+}
 
 /**
  * Component สำหรับปุ่มลบ (กากบาท) ที่มุมบนขวา
@@ -364,7 +389,7 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
  * Component สำหรับแสดง Images
  */
 function ImageObject({ safe, isSelected, orbitControlsRef }) {
-  const texture = useLoader(TextureLoader, safe.src);
+  const texture = useLoader(TextureLoader, encodeURI(safe.src));
   const setCurrentAssetSelect = projectStore(
     (state) => state.setCurrentAssetSelect
   );
@@ -484,31 +509,37 @@ function SceneObjectWrapper({ config, index, isSelected, orbitControlsRef }) {
 
   if (safe.type === "3D Model" || !safe.type) {
     return (
-      <Model3D
-        safe={safe}
-        isSelected={isSelected}
-        orbitControlsRef={orbitControlsRef}
-      />
+      <AssetErrorBoundary>
+        <Model3D
+          safe={safe}
+          isSelected={isSelected}
+          orbitControlsRef={orbitControlsRef}
+        />
+      </AssetErrorBoundary>
     );
   }
 
   if (safe.type === "Video") {
     return (
-      <VideoObject
-        safe={safe}
-        isSelected={isSelected}
-        orbitControlsRef={orbitControlsRef}
-      />
+      <AssetErrorBoundary>
+        <VideoObject
+          safe={safe}
+          isSelected={isSelected}
+          orbitControlsRef={orbitControlsRef}
+        />
+      </AssetErrorBoundary>
     );
   }
 
   if (safe.type === "Image") {
     return (
-      <ImageObject
-        safe={safe}
-        isSelected={isSelected}
-        orbitControlsRef={orbitControlsRef}
-      />
+      <AssetErrorBoundary>
+        <ImageObject
+          safe={safe}
+          isSelected={isSelected}
+          orbitControlsRef={orbitControlsRef}
+        />
+      </AssetErrorBoundary>
     );
   }
 
