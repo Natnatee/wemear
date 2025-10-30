@@ -26,6 +26,48 @@ function Project() {
 
   const updateProjectMutation = useUpdateProject();
 
+  // ฟังชั่นสำหรับหา src ที่ไม่ซ้ำกันทั้งหมดใน project
+  const logUniqueSrcs = () => {
+    const uniqueSrcs = new Set();
+
+    // ตรวจสอบ project.info.tracking_modes
+    if (project?.info?.tracking_modes) {
+      const trackingModes = project.info.tracking_modes;
+
+      // วนลูบทุก tracking mode
+      Object.keys(trackingModes).forEach((modeKey) => {
+        const mode = trackingModes[modeKey];
+
+        // ถ้ามี tracks
+        if (mode.tracks && Array.isArray(mode.tracks)) {
+          mode.tracks.forEach((track) => {
+            // ถ้ามี scenes
+            if (track.scenes && Array.isArray(track.scenes)) {
+              track.scenes.forEach((scene) => {
+                // ถ้ามี assets
+                if (scene.assets && Array.isArray(scene.assets)) {
+                  scene.assets.forEach((asset) => {
+                    // เพิ่ม src เข้า Set ถ้ามีค่า
+                    if (asset.src) {
+                      uniqueSrcs.add(asset.src);
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+
+    // แปลง Set เป็น Array และ console.log
+    const uniqueSrcsArray = Array.from(uniqueSrcs);
+    console.log("🔍 Unique SRCs found in project:", uniqueSrcsArray);
+    console.log(`📊 Total unique SRCs: ${uniqueSrcsArray.length}`);
+
+    return uniqueSrcsArray;
+  };
+
   // โหลดข้อมูลจาก API
   useEffect(() => {
     const fetchProject = async () => {
@@ -283,6 +325,7 @@ function Project() {
               onClick={() => {
                 saveProject(); // Save ก่อน deploy
                 console.log(project);
+                logUniqueSrcs(); // เรียกฟังชั่นหา unique src แทน deploy
                 updateProjectMutation.mutate(project);
               }}
               disabled={updateProjectMutation.isLoading}
