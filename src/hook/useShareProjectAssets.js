@@ -34,7 +34,12 @@ export const useCreateShareProjectAsset = () => {
 
       const response = await axiosInstance.post(
         "/rest/v1/share_project_assets",
-        assetData
+        assetData,
+        {
+          headers: {
+            Prefer: "resolution=merge-duplicates",
+          },
+        }
       );
       return response.data;
     },
