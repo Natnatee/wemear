@@ -213,7 +213,7 @@ export default function ThreeDAssets() {
       const file = rejectedFiles[0];
       if (file.errors.some((error) => error.code === "file-too-large")) {
         alert(
-          `ไฟล์ใหญ่เกินไป! ขนาดสูงสุดที่รองรับคือ 50MB\nไฟล์ของคุณมีขนาด ${(
+          `ไฟล์ใหญ่เกินไป! ขนาดสูงสุดที่รองรับคือ 100MB\nไฟล์ของคุณมีขนาด ${(
             file.file.size /
             (1024 * 1024)
           ).toFixed(1)}MB`
@@ -235,7 +235,7 @@ export default function ThreeDAssets() {
     const maxSize = 50 * 1024 * 1024; // 50MB in bytes
     if (draggedFile.size > maxSize) {
       alert(
-        `ไฟล์ใหญ่เกินไป! ขนาดสูงสุดที่รองรับคือ 50MB\nไฟล์ของคุณมีขนาด ${(
+        `ไฟล์ใหญ่เกินไป! ขนาดสูงสุดที่รองรับคือ 100MB\nไฟล์ของคุณมีขนาด ${(
           draggedFile.size /
           (1024 * 1024)
         ).toFixed(1)}MB`
@@ -263,7 +263,7 @@ export default function ThreeDAssets() {
     } catch (error) {
       console.error("Upload error:", error);
       if (error.response?.status === 413) {
-        alert("ไฟล์ใหญ่เกินไป! กรุณาลดขนาดไฟล์หรือใช้ไฟล์ที่เล็กกว่า 50MB");
+        alert("ไฟล์ใหญ่เกินไป! กรุณาลดขนาดไฟล์หรือใช้ไฟล์ที่เล็กกว่า 100MB");
       } else {
         alert(
           "เกิดข้อผิดพลาดในการอัพโหลด: " + (error.message || "Unknown error")
@@ -542,10 +542,7 @@ export default function ThreeDAssets() {
                           : "ลากไฟล์ 3D มาวางที่นี่"}
                       </p>
                       <p className="text-sm text-gray-500">
-                        หรือคลิกเพื่อเลือกไฟล์ (GLTF, GLB, OBJ, FBX, STL)
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        ขนาดไฟล์สูงสุด: 50MB
+                        หรือคลิกเพื่อเลือกไฟล์ (GLTF, GLB)
                       </p>
                     </div>
                   </div>

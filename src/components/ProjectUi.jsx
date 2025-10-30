@@ -12,9 +12,25 @@ function ProjectUi() {
             <div className="w-20 h-1 bg-gray-800 rounded-full mt-2"></div>
           </div>
 
-          {/* Phone screen - clean white background */}
-          <div className="relative w-full h-full bg-white rounded-[2rem] overflow-hidden shadow-inner flex flex-col items-center justify-center">
-            <p className="text-gray-300 text-sm font-light">Preview Screen</p>
+          {/* Phone screen - with image preview mockup */}
+          <div className="relative w-full h-full bg-white rounded-[2rem] overflow-hidden shadow-inner">
+            {/* Mock background image - cover the whole screen */}
+            <img
+              src="/color_theme.jpg"
+              alt="Background Preview"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+
+            {/* Mock logo in center */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white/90 flex items-center justify-center">
+                <img
+                  src="/weme_ar_shadow.jpg"
+                  alt="Logo Preview"
+                  className="w-20 h-20 "
+                />
+              </div>
+            </div>
           </div>
 
           {/* Home indicator - iOS style */}
