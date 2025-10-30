@@ -98,25 +98,12 @@ export default function ImageAssets() {
         asset.assets_src.includes(imageName)
       ) || [];
 
-    if (usedInProjects.length > 0) {
-      // แสดง modal ถ้ามี project ที่ใช้รูปนี้
-      setDeleteModal({
-        isOpen: true,
-        imageName,
-        usedInProjects,
-      });
-    } else {
-      // ถ้าไม่มี project ไหนใช้ ลบได้เลย
-      if (window.confirm(`คุณต้องการลบ ${imageName} ใช่หรือไม่?`)) {
-        try {
-          await deleteMutation.mutateAsync(imageName);
-          alert("ลบไฟล์สำเร็จ!");
-        } catch (error) {
-          console.error("Delete error:", error);
-          alert("เกิดข้อผิดพลาดในการลบไฟล์");
-        }
-      }
-    }
+    // แสดง modal เสมอ
+    setDeleteModal({
+      isOpen: true,
+      imageName,
+      usedInProjects,
+    });
   };
 
   // ยืนยันลบ (หลังจากแสดง modal)
@@ -351,19 +338,25 @@ export default function ImageAssets() {
                 <h4 className="font-medium text-gray-900 mb-2">
                   โปรเจคที่ใช้ไฟล์นี้:
                 </h4>
-                <div className="space-y-2">
-                  {deleteModal.usedInProjects.map((project, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-gray-700">
-                        {project.project_name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {deleteModal.usedInProjects.length > 0 ? (
+                  <div className="space-y-2">
+                    {deleteModal.usedInProjects.map((project, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-gray-700">
+                          {project.project_name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">
+                    ไม่มีโปรเจคไหนใช้ไฟล์นี้
+                  </p>
+                )}
               </div>
             </div>
 
