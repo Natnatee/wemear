@@ -1,11 +1,17 @@
 import React, { useState, useCallback, useEffect, memo } from "react";
 import { Box, Upload, Download, FileText, Trash2 } from "lucide-react";
 import NavbarWithSidebar from "../../components/NavbarWithSidebar";
-import { useThreeDAssets, useUploadThreeD, useDeleteThreeD, getThreeDUrl } from "../../hook/useThreeDAssets";
+import {
+  useThreeDAssets,
+  useUploadThreeD,
+  useDeleteThreeD,
+  getThreeDUrl,
+} from "../../hook/useThreeDAssets";
+import { useShareProjectAssets } from "../../hook/useShareProjectAssets";
 import { useDropzone } from "react-dropzone";
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 
 export default function ThreeDAssets() {
   const [selectedModel, setSelectedModel] = useState(null);
@@ -13,21 +19,27 @@ export default function ThreeDAssets() {
   const [draggedFile, setDraggedFile] = useState(null);
   const [previewThumbnail, setPreviewThumbnail] = useState(null);
   const [thumbnails, setThumbnails] = useState({});
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    modelName: null,
+    usedInProjects: [],
+  });
 
   const { data: models, isLoading, error } = useThreeDAssets();
+  const { data: shareProjectAssets } = useShareProjectAssets();
   const uploadMutation = useUploadThreeD();
   const deleteMutation = useDeleteThreeD();
 
   // Generate 3D preview
   const generate3DPreview = useCallback(async (file) => {
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-    if (!['gltf', 'glb', 'obj'].includes(fileExtension)) {
+    const fileExtension = file.name.split(".").pop().toLowerCase();
+    if (!["gltf", "glb", "obj"].includes(fileExtension)) {
       setPreviewThumbnail(null);
       return;
     }
 
     try {
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = 200;
       canvas.height = 200;
 
@@ -47,13 +59,13 @@ export default function ThreeDAssets() {
       const fileUrl = URL.createObjectURL(file);
       let model = null;
 
-      if (fileExtension === 'gltf' || fileExtension === 'glb') {
+      if (fileExtension === "gltf" || fileExtension === "glb") {
         const loader = new GLTFLoader();
         const gltf = await new Promise((resolve, reject) => {
           loader.load(fileUrl, resolve, undefined, reject);
         });
         model = gltf.scene;
-      } else if (fileExtension === 'obj') {
+      } else if (fileExtension === "obj") {
         const loader = new OBJLoader();
         model = await new Promise((resolve, reject) => {
           loader.load(fileUrl, resolve, undefined, reject);
@@ -82,25 +94,25 @@ export default function ThreeDAssets() {
         // Render single frame only
         renderer.render(scene, camera);
 
-        const thumbnail = canvas.toDataURL('image/png');
+        const thumbnail = canvas.toDataURL("image/png");
         setPreviewThumbnail(thumbnail);
       }
 
       URL.revokeObjectURL(fileUrl);
       renderer.dispose();
     } catch (error) {
-      console.error('Error generating 3D preview:', error);
+      console.error("Error generating 3D preview:", error);
       setPreviewThumbnail(null);
     }
   }, []);
 
   const generateThumbnailFromUrl = useCallback(async (url, fileExtension) => {
-    if (!['gltf', 'glb', 'obj'].includes(fileExtension)) {
+    if (!["gltf", "glb", "obj"].includes(fileExtension)) {
       return null;
     }
 
     try {
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = 200;
       canvas.height = 200;
 
@@ -119,13 +131,13 @@ export default function ThreeDAssets() {
 
       let model = null;
 
-      if (fileExtension === 'gltf' || fileExtension === 'glb') {
+      if (fileExtension === "gltf" || fileExtension === "glb") {
         const loader = new GLTFLoader();
         const gltf = await new Promise((resolve, reject) => {
           loader.load(url, resolve, undefined, reject);
         });
         model = gltf.scene;
-      } else if (fileExtension === 'obj') {
+      } else if (fileExtension === "obj") {
         const loader = new OBJLoader();
         model = await new Promise((resolve, reject) => {
           loader.load(url, resolve, undefined, reject);
@@ -154,7 +166,7 @@ export default function ThreeDAssets() {
         // Render single frame only
         renderer.render(scene, camera);
 
-        const thumbnail = canvas.toDataURL('image/png');
+        const thumbnail = canvas.toDataURL("image/png");
         renderer.dispose();
         return thumbnail;
       }
@@ -162,37 +174,54 @@ export default function ThreeDAssets() {
       renderer.dispose();
       return null;
     } catch (error) {
-      console.error('Error generating 3D preview:', error);
+      console.error("Error generating 3D preview:", error);
       return null;
     }
   }, []);
 
   // Drag and drop functionality
-  const onDrop = useCallback(async (acceptedFiles) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      setDraggedFile(file);
-      setSelectedModel(URL.createObjectURL(file));
-      setFileName(file.name);
-      await generate3DPreview(file);
-    }
-  }, [generate3DPreview]);
+  const onDrop = useCallback(
+    async (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      if (file) {
+        setDraggedFile(file);
+        setSelectedModel(URL.createObjectURL(file));
+        setFileName(file.name);
+        await generate3DPreview(file);
+      }
+    },
+    [generate3DPreview]
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'model/*': ['.gltf', '.glb', '.obj', '.fbx', '.dae', '.3ds', '.ply', '.stl']
+      "model/*": [
+        ".gltf",
+        ".glb",
+        ".obj",
+        ".fbx",
+        ".dae",
+        ".3ds",
+        ".ply",
+        ".stl",
+      ],
     },
     multiple: false,
     maxSize: 50 * 1024 * 1024, // 50MB limit
     onDropRejected: (rejectedFiles) => {
       const file = rejectedFiles[0];
-      if (file.errors.some(error => error.code === 'file-too-large')) {
-        alert(`ไฟล์ใหญ่เกินไป! ขนาดสูงสุดที่รองรับคือ 50MB\nไฟล์ของคุณมีขนาด ${(file.file.size / (1024 * 1024)).toFixed(1)}MB`);
+      if (file.errors.some((error) => error.code === "file-too-large")) {
+        alert(
+          `ไฟล์ใหญ่เกินไป! ขนาดสูงสุดที่รองรับคือ 50MB\nไฟล์ของคุณมีขนาด ${(
+            file.file.size /
+            (1024 * 1024)
+          ).toFixed(1)}MB`
+        );
       } else {
-        alert('ไฟล์ไม่ถูกต้อง กรุณาเลือกไฟล์ 3D ที่รองรับ');
+        alert("ไฟล์ไม่ถูกต้อง กรุณาเลือกไฟล์ 3D ที่รองรับ");
       }
-    }
+    },
   });
 
   // Handle upload
@@ -205,17 +234,24 @@ export default function ThreeDAssets() {
     // Check file size (50MB limit)
     const maxSize = 50 * 1024 * 1024; // 50MB in bytes
     if (draggedFile.size > maxSize) {
-      alert(`ไฟล์ใหญ่เกินไป! ขนาดสูงสุดที่รองรับคือ 50MB\nไฟล์ของคุณมีขนาด ${(draggedFile.size / (1024 * 1024)).toFixed(1)}MB`);
+      alert(
+        `ไฟล์ใหญ่เกินไป! ขนาดสูงสุดที่รองรับคือ 50MB\nไฟล์ของคุณมีขนาด ${(
+          draggedFile.size /
+          (1024 * 1024)
+        ).toFixed(1)}MB`
+      );
       return;
     }
 
-    const fileExtension = draggedFile.name.split('.').pop();
-    const finalFileName = fileName.includes('.') ? fileName : `${fileName}.${fileExtension}`;
+    const fileExtension = draggedFile.name.split(".").pop();
+    const finalFileName = fileName.includes(".")
+      ? fileName
+      : `${fileName}.${fileExtension}`;
 
     try {
       await uploadMutation.mutateAsync({
         file: draggedFile,
-        fileName: finalFileName
+        fileName: finalFileName,
       });
 
       // Reset form
@@ -229,52 +265,73 @@ export default function ThreeDAssets() {
       if (error.response?.status === 413) {
         alert("ไฟล์ใหญ่เกินไป! กรุณาลดขนาดไฟล์หรือใช้ไฟล์ที่เล็กกว่า 50MB");
       } else {
-        alert("เกิดข้อผิดพลาดในการอัพโหลด: " + (error.message || "Unknown error"));
+        alert(
+          "เกิดข้อผิดพลาดในการอัพโหลด: " + (error.message || "Unknown error")
+        );
       }
     }
   };
 
   // Handle download
-  const handleDownload = useCallback((modelName) => {
-    const url = getThreeDUrl(modelName);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = modelName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, [getThreeDUrl]);
+  const handleDownload = useCallback(
+    (modelName) => {
+      const url = getThreeDUrl(modelName);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = modelName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    [getThreeDUrl]
+  );
 
   // Handle delete
-  const handleDelete = useCallback(async (modelName) => {
-    if (window.confirm(`คุณต้องการลบ ${modelName} ใช่หรือไม่?`)) {
-      try {
-        await deleteMutation.mutateAsync(modelName);
-        alert("ลบไฟล์สำเร็จ!");
-      } catch (error) {
-        console.error("Delete error:", error);
-        alert("เกิดข้อผิดพลาดในการลบไฟล์");
-      }
+  const handleDelete = useCallback(
+    async (modelName) => {
+      // ตรวจสอบว่า 3D model นี้ถูกใช้ใน project ไหนบ้าง
+      const usedInProjects =
+        shareProjectAssets?.filter((asset) =>
+          asset.assets_src.includes(modelName)
+        ) || [];
+
+      // แสดง modal เสมอ
+      setDeleteModal({
+        isOpen: true,
+        modelName,
+        usedInProjects,
+      });
+    },
+    [shareProjectAssets]
+  );
+
+  // ยืนยันลบ (หลังจากแสดง modal)
+  const confirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(deleteModal.modelName);
+      alert("ลบไฟล์สำเร็จ!");
+      setDeleteModal({ isOpen: false, modelName: null, usedInProjects: [] });
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("เกิดข้อผิดพลาดในการลบไฟล์");
     }
-  }, [deleteMutation]);
+  };
 
   // Get model type from file extension
   const getModelType = (fileName) => {
-    const ext = fileName.split('.').pop().toLowerCase();
+    const ext = fileName.split(".").pop().toLowerCase();
     const typeMap = {
-      'gltf': 'GLTF',
-      'glb': 'GLB',
-      'obj': 'OBJ',
-      'fbx': 'FBX',
-      'dae': 'DAE',
-      '3ds': '3DS',
-      'ply': 'PLY',
-      'stl': 'STL'
+      gltf: "GLTF",
+      glb: "GLB",
+      obj: "OBJ",
+      fbx: "FBX",
+      dae: "DAE",
+      "3ds": "3DS",
+      ply: "PLY",
+      stl: "STL",
     };
-    return typeMap[ext] || '3D';
+    return typeMap[ext] || "3D";
   };
-
-
 
   useEffect(() => {
     const generateAllThumbnails = async () => {
@@ -286,8 +343,8 @@ export default function ThreeDAssets() {
       for (const model of models) {
         if (newThumbnails[model.id] !== undefined) continue;
 
-        const ext = model.name.split('.').pop().toLowerCase();
-        if (['gltf', 'glb', 'obj'].includes(ext)) {
+        const ext = model.name.split(".").pop().toLowerCase();
+        if (["gltf", "glb", "obj"].includes(ext)) {
           toGenerate.push({ model, ext });
           newThumbnails[model.id] = null; // placeholder for loading
         } else {
@@ -303,10 +360,10 @@ export default function ThreeDAssets() {
           try {
             const url = getThreeDUrl(model.name);
             const thumbnail = await generateThumbnailFromUrl(url, ext);
-            setThumbnails(prev => ({ ...prev, [model.id]: thumbnail }));
+            setThumbnails((prev) => ({ ...prev, [model.id]: thumbnail }));
           } catch (e) {
             console.log(`Error generating thumbnail for ${model.name}: ${e}`);
-            setThumbnails(prev => ({ ...prev, [model.id]: null }));
+            setThumbnails((prev) => ({ ...prev, [model.id]: null }));
           }
         })
       );
@@ -316,93 +373,97 @@ export default function ThreeDAssets() {
   }, [models, getThreeDUrl, generateThumbnailFromUrl]);
 
   // ModelItem component with memoization
-  const ModelItem = memo(({ model, handleDownload, handleDelete, deleteMutationIsLoading }) => {
-    return (
-      <div className="group relative">
-        <div className="aspect-square bg-white rounded-lg overflow-hidden relative border z-0">
-          {(() => {
-            const ext = model.name.split('.').pop().toLowerCase();
-            const isSupported = ['gltf', 'glb', 'obj'].includes(ext);
-            const thumbnail = thumbnails[model.id];
+  const ModelItem = memo(
+    ({ model, handleDownload, handleDelete, deleteMutationIsLoading }) => {
+      return (
+        <div className="group relative">
+          <div className="aspect-square bg-white rounded-lg overflow-hidden relative border z-0">
+            {(() => {
+              const ext = model.name.split(".").pop().toLowerCase();
+              const isSupported = ["gltf", "glb", "obj"].includes(ext);
+              const thumbnail = thumbnails[model.id];
 
-            if (!isSupported || thumbnail === null) {
-              return (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
-                  <Box size={32} className="text-gray-400 mb-2" />
-                  <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">
-                    {getModelType(model.name)}
-                  </span>
-                </div>
-              );
-            }
-
-            if (thumbnail && thumbnail !== null) {
-              return (
-                <div className="w-full h-full relative">
-                  <img
-                    src={thumbnail}
-                    alt={model.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-2 left-2 z-10">
-                    <span className="text-xs font-bold text-white bg-green-600 bg-opacity-80 px-2 py-1 rounded">
+              if (!isSupported || thumbnail === null) {
+                return (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
+                    <Box size={32} className="text-gray-400 mb-2" />
+                    <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">
                       {getModelType(model.name)}
                     </span>
                   </div>
+                );
+              }
+
+              if (thumbnail && thumbnail !== null) {
+                return (
+                  <div className="w-full h-full relative">
+                    <img
+                      src={thumbnail}
+                      alt={model.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 z-10">
+                      <span className="text-xs font-bold text-white bg-green-600 bg-opacity-80 px-2 py-1 rounded">
+                        {getModelType(model.name)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Loading for supported
+              return (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mb-2"></div>
+                  <span className="text-xs text-gray-500">Loading...</span>
                 </div>
               );
-            }
+            })()}
 
-            // Loading for supported
-            return (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mb-2"></div>
-                <span className="text-xs text-gray-500">Loading...</span>
+            {/* 3D overlay */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+              <div className="p-2 bg-white bg-opacity-90 rounded-full">
+                <Box size={16} className="text-gray-700" />
               </div>
-            );
-          })()}
+            </div>
+          </div>
 
-          {/* 3D overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-            <div className="p-2 bg-white bg-opacity-90 rounded-full">
-              <Box size={16} className="text-gray-700" />
+          {/* Model Info */}
+          <div className="mt-2">
+            <p className="text-xs text-gray-600 truncate" title={model.name}>
+              {model.name}
+            </p>
+            <p className="text-xs text-gray-400">
+              {model.metadata?.size
+                ? (model.metadata.size / (1024 * 1024)).toFixed(1) + " MB"
+                : "N/A"}
+            </p>
+          </div>
+
+          {/* Action Buttons (Show on Hover) */}
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex gap-1">
+              <button
+                onClick={() => handleDownload(model.name)}
+                className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                title="ดาวน์โหลด"
+              >
+                <Download size={12} />
+              </button>
+              <button
+                onClick={() => handleDelete(model.name)}
+                className="p-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                title="ลบ"
+                disabled={deleteMutationIsLoading}
+              >
+                <Trash2 size={12} />
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Model Info */}
-        <div className="mt-2">
-          <p className="text-xs text-gray-600 truncate" title={model.name}>
-            {model.name}
-          </p>
-          <p className="text-xs text-gray-400">
-            {model.metadata?.size ? (model.metadata.size / (1024 * 1024)).toFixed(1) + ' MB' : 'N/A'}
-          </p>
-        </div>
-
-        {/* Action Buttons (Show on Hover) */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="flex gap-1">
-            <button
-              onClick={() => handleDownload(model.name)}
-              className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              title="ดาวน์โหลด"
-            >
-              <Download size={12} />
-            </button>
-            <button
-              onClick={() => handleDelete(model.name)}
-              className="p-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-              title="ลบ"
-              disabled={deleteMutationIsLoading}
-            >
-              <Trash2 size={12} />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  });
+      );
+    }
+  );
 
   return (
     <>
@@ -424,14 +485,17 @@ export default function ThreeDAssets() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Left - Drag and Drop */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload 3D Model</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Upload 3D Model
+              </h3>
 
               <div
                 {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${isDragActive
-                  ? 'border-green-400 bg-green-50'
-                  : 'border-gray-300 hover:border-gray-400'
-                  }`}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  isDragActive
+                    ? "border-green-400 bg-green-50"
+                    : "border-gray-300 hover:border-gray-400"
+                }`}
               >
                 <input {...getInputProps()} />
                 {selectedModel ? (
@@ -454,10 +518,15 @@ export default function ThreeDAssets() {
                         {draggedFile?.name}
                       </p>
                       <p className="text-xs text-gray-500">
-                        ขนาด: {draggedFile ? (draggedFile.size / (1024 * 1024)).toFixed(1) : 0} MB
+                        ขนาด:{" "}
+                        {draggedFile
+                          ? (draggedFile.size / (1024 * 1024)).toFixed(1)
+                          : 0}{" "}
+                        MB
                       </p>
                       <p className="text-xs font-medium text-green-600">
-                        ประเภท: {draggedFile ? getModelType(draggedFile.name) : ''}
+                        ประเภท:{" "}
+                        {draggedFile ? getModelType(draggedFile.name) : ""}
                       </p>
                     </div>
                   </div>
@@ -468,7 +537,9 @@ export default function ThreeDAssets() {
                     </div>
                     <div>
                       <p className="text-lg font-medium text-gray-900">
-                        {isDragActive ? 'วางไฟล์ที่นี่...' : 'ลากไฟล์ 3D มาวางที่นี่'}
+                        {isDragActive
+                          ? "วางไฟล์ที่นี่..."
+                          : "ลากไฟล์ 3D มาวางที่นี่"}
                       </p>
                       <p className="text-sm text-gray-500">
                         หรือคลิกเพื่อเลือกไฟล์ (GLTF, GLB, OBJ, FBX, STL)
@@ -484,7 +555,9 @@ export default function ThreeDAssets() {
 
             {/* Right - Tools */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Tools</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Tools
+              </h3>
 
               <div className="space-y-4">
                 {/* File Name Input */}
@@ -510,7 +583,7 @@ export default function ThreeDAssets() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                   >
                     <Upload size={16} />
-                    {uploadMutation.isLoading ? 'กำลังอัพโหลด...' : 'อัพโหลด'}
+                    {uploadMutation.isLoading ? "กำลังอัพโหลด..." : "อัพโหลด"}
                   </button>
                 </div>
               </div>
@@ -520,7 +593,9 @@ export default function ThreeDAssets() {
           {/* Bottom Block - 3D Gallery */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">3D Models ทั้งหมด</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                3D Models ทั้งหมด
+              </h3>
               <span className="text-sm text-gray-500">
                 {models?.length || 0} ไฟล์
               </span>
@@ -533,7 +608,9 @@ export default function ThreeDAssets() {
               </div>
             ) : error ? (
               <div className="text-center py-8">
-                <p className="text-red-500">เกิดข้อผิดพลาดในการโหลด 3D Models</p>
+                <p className="text-red-500">
+                  เกิดข้อผิดพลาดในการโหลด 3D Models
+                </p>
               </div>
             ) : models && models.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -554,12 +631,84 @@ export default function ThreeDAssets() {
                   <Box size={24} className="text-gray-400" />
                 </div>
                 <p className="text-gray-500">ยังไม่มี 3D Models</p>
-                <p className="text-sm text-gray-400">เริ่มต้นด้วยการอัพโหลด 3D Model แรกของคุณ</p>
+                <p className="text-sm text-gray-400">
+                  เริ่มต้นด้วยการอัพโหลด 3D Model แรกของคุณ
+                </p>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 size={20} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  ยืนยันการลบ
+                </h3>
+                <p className="text-sm text-gray-600">
+                  ไฟล์นี้ถูกใช้ในโปรเจคต่อไปนี้
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  โปรเจคที่ใช้ไฟล์นี้:
+                </h4>
+                {deleteModal.usedInProjects.length > 0 ? (
+                  <div className="space-y-2">
+                    {deleteModal.usedInProjects.map((project, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-gray-700">
+                          {project.project_name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">
+                    ไม่มีโปรเจคไหนใช้ไฟล์นี้
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() =>
+                  setDeleteModal({
+                    isOpen: false,
+                    modelName: null,
+                    usedInProjects: [],
+                  })
+                }
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteMutation.isLoading}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {deleteMutation.isLoading ? "กำลังลบ..." : "ลบไฟล์"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
