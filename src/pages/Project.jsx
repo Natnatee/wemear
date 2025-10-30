@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
 import QRCodeGenerator from "../components/QRCodeGenerator";
 import ModalImageUpdate from "../components/ModalImageUpdate";
+import ProjectUi from "../components/ProjectUi";
 import SectionSceneImage from "../components/SectionSceneImage";
 import projectStore from "../utils/projectStore.js";
 import axiosInstance from "../utils/axios";
@@ -15,6 +16,7 @@ function Project() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isProjectUiModalOpen, setIsProjectUiModalOpen] = useState(false);
 
   const project = projectStore((state) => state.project);
   const setProject = projectStore((state) => state.setProject);
@@ -339,7 +341,13 @@ function Project() {
           </div>
 
           <SectionSceneImage project={project} />
-
+          {/* ส่วนสำหรับ ทำ Project Ui */}
+          <button
+            onClick={() => setIsProjectUiModalOpen(true)}
+            className="bg-white rounded-lg shadow-md p-8 hover:bg-gray-50 transition w-full text-left"
+          >
+            <h2 className="text-lg font-semibold mb-4">Project Ui</h2>
+          </button>
           {/* ส่วน QR Code */}
           <div className="bg-white rounded-lg shadow-md p-8">
             <QRCodeGenerator link={project.link} />
@@ -353,9 +361,7 @@ function Project() {
               }}
               disabled={updateProjectMutation.isLoading}
             >
-              {updateProjectMutation.isLoading
-                ? "กำลัง Deploy..."
-                : "Deploy"}
+              {updateProjectMutation.isLoading ? "กำลัง Deploy..." : "Deploy"}
             </button>
             {updateProjectMutation.isSuccess && (
               <div className="mt-2 text-green-600 text-sm">Deploy สำเร็จ!</div>
@@ -369,6 +375,21 @@ function Project() {
           </div>
         </div>
       </div>
+
+      {/* Modal สำหรับ Project Ui */}
+      {isProjectUiModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-lg w-3/5 h-3/4 mx-4 relative">
+            <ProjectUi />
+            <button
+              onClick={() => setIsProjectUiModalOpen(false)}
+              className="absolute bottom-4 right-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal สำหรับอัพเดทรูปภาพ */}
       <ModalImageUpdate
