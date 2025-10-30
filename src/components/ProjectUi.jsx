@@ -23,13 +23,18 @@ function ProjectUi() {
 
             {/* Mock logo in center */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-white/90 flex items-center justify-center">
+              <div className="bg-white/90 flex items-center justify-center rounded-xl">
                 <img
                   src="/weme_ar_shadow.jpg"
                   alt="Logo Preview"
-                  className="w-20 h-20 "
+                  className="w-20 h-20 rounded-xl"
                 />
               </div>
+            </div>
+
+            {/* Mock Download*/}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 px-4 py-2 rounded-full shadow-md text-center text-sm font-semibold">
+              Downloading... 50%
             </div>
           </div>
 
