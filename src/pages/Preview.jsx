@@ -121,7 +121,12 @@ function Preview() {
             }
 
             // 4) Trigger update (deploy-like)
-            updateProjectMutation.mutate(projectState);
+            // use mutateAsync so the caller can await completion for animation
+            if (updateProjectMutation?.mutateAsync) {
+              await updateProjectMutation.mutateAsync(projectState);
+            } else {
+              updateProjectMutation.mutate(projectState);
+            }
           } catch (e) {
             console.warn("Preview: save/deploy failed", e);
           }
