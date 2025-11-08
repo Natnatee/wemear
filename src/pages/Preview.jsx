@@ -5,6 +5,7 @@ import SceneImage from "../components/SceneImage";
 import NavbarWithSidebar from "../components/NavbarWithSidebar";
 import ToolScene from "../components/ToolScene";
 import ToolAssets from "../components/ToolAssets";
+import ToolTop from "../components/ToolTop";
 import projectStore from "../utils/projectStore.js";
 
 function Preview() {
@@ -95,6 +96,22 @@ function Preview() {
   return (
     <>
       <NavbarWithSidebar />
+      {/* Top-centered horizontal tool bar */}
+      <ToolTop
+        onSave={() => {
+          console.log("Preview: save clicked (ToolTop)");
+          try {
+            if (projectState) {
+              localStorage.setItem(
+                "preview_saved_project",
+                JSON.stringify(projectState)
+              );
+            }
+          } catch (e) {
+            console.warn("Preview: failed to save project to localStorage", e);
+          }
+        }}
+      />
       <div
         style={{
           height: "100vh",
