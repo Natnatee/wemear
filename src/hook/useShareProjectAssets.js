@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import axiosInstance from "../utils/axios";
 
+// (No module-scoped delete behavior here; bulk replace is handled by utils/shareUniqueSrcs)
+
 // Fetch all share project assets
 export const useShareProjectAssets = () => {
   return useQuery(

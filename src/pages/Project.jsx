@@ -8,7 +8,6 @@ import SectionSceneImage from "../components/SectionSceneImage";
 import projectStore from "../utils/projectStore.js";
 import axiosInstance from "../utils/axios";
 import { useUpdateProject } from "../hook/useProject";
-import { useCreateShareProjectAsset } from "../hook/useShareProjectAssets";
 import { shareUniqueAssetSrcs } from "../utils/shareUniqueSrcs";
 
 function Project() {
@@ -29,7 +28,6 @@ function Project() {
   const saveProject = projectStore((state) => state.saveProject);
 
   const updateProjectMutation = useUpdateProject();
-  const createShareAssetMutation = useCreateShareProjectAsset();
 
   // shareUniqueSrcs logic moved to utils/shareUniqueSrcs.js
 
@@ -297,7 +295,7 @@ function Project() {
                 saveProject(); // Save ก่อน deploy
                 console.log(project);
                 try {
-                  await shareUniqueAssetSrcs(project, createShareAssetMutation);
+                  await shareUniqueAssetSrcs(project);
                 } catch (err) {
                   console.error("Error sharing assets on deploy:", err);
                 }

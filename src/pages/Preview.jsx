@@ -8,7 +8,6 @@ import ToolAssets from "../components/ToolAssets";
 import ToolTop from "../components/ToolTop";
 import projectStore from "../utils/projectStore.js";
 import { useUpdateProject } from "../hook/useProject";
-import { useCreateShareProjectAsset } from "../hook/useShareProjectAssets";
 import { shareUniqueAssetSrcs } from "../utils/shareUniqueSrcs";
 
 function Preview() {
@@ -18,7 +17,7 @@ function Preview() {
     (state) => state.loadProjectFromStorage
   );
   const updateProjectMutation = useUpdateProject();
-  const createShareAssetMutation = useCreateShareProjectAsset();
+
   const [scene_image_select, setscene_image_select] = useState([]);
   const [currentScene, setCurrentScene] = useState(null);
   // const location = useLocation(); // ไม่ใช้แล้ว
@@ -116,10 +115,7 @@ function Preview() {
 
             // 3) Share unique srcs via shared util
             try {
-              await shareUniqueAssetSrcs(
-                projectState,
-                createShareAssetMutation
-              );
+              await shareUniqueAssetSrcs(projectState);
             } catch (err) {
               console.error("Preview: Error sharing assets:", err);
             }
