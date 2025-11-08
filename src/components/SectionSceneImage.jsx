@@ -29,19 +29,9 @@ function SectionSceneImage({ project }) {
     const selectedMind = mindImages.find((mind) => mind.mind_name === mindName);
 
     if (selectedMind && project) {
-      // สร้าง tracks อัตโนมัติจาก mind_image keys (T1, T2, T3, T4)
-      const trackIds = Object.keys(selectedMind.mind_image || {});
-      const tracks = trackIds.map((trackId) => ({
-        track_id: trackId,
-        scenes: [
-          {
-            scene_id: "S1",
-            assets: [],
-          },
-        ],
-      }));
+      // Update only mindFile in image tracking. Do not modify tracks or other image fields.
+      const existingImageMode = project.info?.tracking_modes?.image || {};
 
-      // อัพเดท project state ในส่วน image tracking
       const updatedProject = {
         ...project,
         info: {
@@ -49,20 +39,20 @@ function SectionSceneImage({ project }) {
           tracking_modes: {
             ...project.info?.tracking_modes,
             image: {
-              ...project.info?.tracking_modes?.image,
+              ...existingImageMode,
               mindFile: {
                 mind_name: selectedMind.mind_name,
                 mind_id: selectedMind.mind_id,
                 mind_src: selectedMind.mind_src,
                 mind_image: selectedMind.mind_image,
               },
-              tracks: tracks,
+              // keep existing tracks (if any) by spreading existingImageMode
             },
           },
         },
       };
 
-      // อัพเดท projectStore
+      // Update projectStore
       setProject(updatedProject);
     }
   };
@@ -126,18 +116,24 @@ function SectionSceneImage({ project }) {
     const mindImages = imageMode.mindFile?.mind_image || {};
 
     // C. คำนวณและคืนค่า Array
-    return (imageMode.tracks || []).flatMap((track) => {
-      const trackId = track.track_id;
-      const imgsrc = mindImages[trackId] ?? "/default_asset_image/image.png";
-      const scenes = track.scenes || [];
-      return scenes.map((scene) => ({
-        type: "image",
-        imgsrc,
-        scene_id: `IMAGE_${trackId}${scene.scene_id}`, // IMAGE_T1S1
-        track_id: trackId,
-        scene_key: scene.scene_id,
-      }));
-    });
+    // Filter tracks to only those that exist in the selected mindFile (mind_image keys).
+    const mindKeys = Object.keys(mindImages || {});
+    if (mindKeys.length === 0) return [];
+
+    return (imageMode.tracks || [])
+      .filter((track) => mindKeys.includes(track.track_id))
+      .flatMap((track) => {
+        const trackId = track.track_id;
+        const imgsrc = mindImages[trackId] ?? "/default_asset_image/image.png";
+        const scenes = track.scenes || [];
+        return scenes.map((scene) => ({
+          type: "image",
+          imgsrc,
+          scene_id: `IMAGE_${trackId}${scene.scene_id}`, // IMAGE_T1S1
+          track_id: trackId,
+          scene_key: scene.scene_id,
+        }));
+      });
   }, [project]); // 4. Dependency คือ 'project' เท่านั้น
 
   // รายการ tracks ที่มีอยู่
@@ -170,9 +166,7 @@ function SectionSceneImage({ project }) {
               </option>
             ))}
           </select>
-          {loading && (
-            <span className="text-sm text-gray-500">Loading...</span>
-          )}
+          {loading && <span className="text-sm text-gray-500">Loading...</span>}
 
           {/* ปุ่ม Add MindFile */}
           <button
