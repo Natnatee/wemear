@@ -7,12 +7,18 @@ import ToolScene from "../components/ToolScene";
 import ToolAssets from "../components/ToolAssets";
 import ToolTop from "../components/ToolTop";
 import projectStore from "../utils/projectStore.js";
+import { useUpdateProject } from "../hook/useProject";
+import { useCreateShareProjectAsset } from "../hook/useShareProjectAssets";
+import { shareUniqueAssetSrcs } from "../utils/shareUniqueSrcs";
 
 function Preview() {
   const projectState = projectStore((state) => state.project);
+  const saveProject = projectStore((state) => state.saveProject);
   const loadProjectFromStorage = projectStore(
     (state) => state.loadProjectFromStorage
   );
+  const updateProjectMutation = useUpdateProject();
+  const createShareAssetMutation = useCreateShareProjectAsset();
   const [scene_image_select, setscene_image_select] = useState([]);
   const [currentScene, setCurrentScene] = useState(null);
   // const location = useLocation(); // ไม่ใช้แล้ว
@@ -98,17 +104,30 @@ function Preview() {
       <NavbarWithSidebar />
       {/* Top-centered horizontal tool bar */}
       <ToolTop
-        onSave={() => {
+        onSave={async () => {
           console.log("Preview: save clicked (ToolTop)");
+
           try {
-            if (projectState) {
-              localStorage.setItem(
-                "preview_saved_project",
-                JSON.stringify(projectState)
+            // 1) Save locally via projectStore
+            saveProject();
+
+            // 2) Log project state
+            console.log("projectState", projectState);
+
+            // 3) Share unique srcs via shared util
+            try {
+              await shareUniqueAssetSrcs(
+                projectState,
+                createShareAssetMutation
               );
+            } catch (err) {
+              console.error("Preview: Error sharing assets:", err);
             }
+
+            // 4) Trigger update (deploy-like)
+            updateProjectMutation.mutate(projectState);
           } catch (e) {
-            console.warn("Preview: failed to save project to localStorage", e);
+            console.warn("Preview: save/deploy failed", e);
           }
         }}
       />

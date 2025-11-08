@@ -9,6 +9,7 @@ import projectStore from "../utils/projectStore.js";
 import axiosInstance from "../utils/axios";
 import { useUpdateProject } from "../hook/useProject";
 import { useCreateShareProjectAsset } from "../hook/useShareProjectAssets";
+import { shareUniqueAssetSrcs } from "../utils/shareUniqueSrcs";
 
 function Project() {
   const { id } = useParams();
@@ -30,68 +31,7 @@ function Project() {
   const updateProjectMutation = useUpdateProject();
   const createShareAssetMutation = useCreateShareProjectAsset();
 
-  // ฟังชั่นสำหรับหา src ที่ไม่ซ้ำกันทั้งหมดใน project และส่งไป share
-  const shareUniqueSrcs = async () => {
-    const uniqueSrcs = new Set();
-
-    // ตรวจสอบ project.info.tracking_modes
-    if (project?.info?.tracking_modes) {
-      const trackingModes = project.info.tracking_modes;
-
-      // วนลูบทุก tracking mode
-      Object.keys(trackingModes).forEach((modeKey) => {
-        const mode = trackingModes[modeKey];
-
-        // ถ้ามี tracks
-        if (mode.tracks && Array.isArray(mode.tracks)) {
-          mode.tracks.forEach((track) => {
-            // ถ้ามี scenes
-            if (track.scenes && Array.isArray(track.scenes)) {
-              track.scenes.forEach((scene) => {
-                // ถ้ามี assets
-                if (scene.assets && Array.isArray(scene.assets)) {
-                  scene.assets.forEach((asset) => {
-                    // เพิ่ม src เข้า Set ถ้ามีค่า
-                    if (asset.src) {
-                      uniqueSrcs.add(asset.src);
-                    }
-                  });
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-
-    // แปลง Set เป็น Array
-    const uniqueSrcsArray = Array.from(uniqueSrcs);
-    console.log("🔍 Sharing unique SRCs:", uniqueSrcsArray);
-    console.log(`📊 Total unique SRCs to share: ${uniqueSrcsArray.length}`);
-
-    if (uniqueSrcsArray.length === 0) {
-      console.log("⚠️ ไม่พบ assets ที่จะ share");
-      return;
-    }
-
-    try {
-      // วนลูบส่งไป share แต่ละ src
-      const promises = uniqueSrcsArray.map((src) =>
-        createShareAssetMutation.mutateAsync({
-          project_id: project.project_id,
-          assets_src: src,
-          project_name: project.project_name,
-        })
-      );
-
-      await Promise.all(promises);
-      console.log(`✅ Share สำเร็จ ${uniqueSrcsArray.length} assets`);
-    } catch (error) {
-      console.error("❌ Error sharing assets:", error);
-    }
-
-    return uniqueSrcsArray;
-  };
+  // shareUniqueSrcs logic moved to utils/shareUniqueSrcs.js
 
   // โหลดข้อมูลจาก API
   useEffect(() => {
@@ -353,10 +293,14 @@ function Project() {
             <QRCodeGenerator link={project.link} />
             <button
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => {
+              onClick={async () => {
                 saveProject(); // Save ก่อน deploy
                 console.log(project);
-                shareUniqueSrcs(); // เรียกฟังชั่น share unique src แทน deploy
+                try {
+                  await shareUniqueAssetSrcs(project, createShareAssetMutation);
+                } catch (err) {
+                  console.error("Error sharing assets on deploy:", err);
+                }
                 updateProjectMutation.mutate(project);
               }}
               disabled={updateProjectMutation.isLoading}
