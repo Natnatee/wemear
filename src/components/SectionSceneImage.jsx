@@ -29,9 +29,41 @@ function SectionSceneImage({ project }) {
     const selectedMind = mindImages.find((mind) => mind.mind_name === mindName);
 
     if (selectedMind && project) {
-      // Update only mindFile in image tracking. Do not modify tracks or other image fields.
-      const existingImageMode = project.info?.tracking_modes?.image || {};
+      // สร้าง tracks อัตโนมัติจาก mind_image keys (T1, T2, T3, T4)
+      // แต่ถ้าใน project.info.tracking_modes.image.tracks มี track ที่มี scene "S1"
+      // และ scene นั้นมี assets ที่ไม่ใช่ [] ให้เก็บ track นั้นไว้เหมือนเดิม
+      const trackIds = Object.keys(selectedMind.mind_image || {});
+      const existingTracks =
+        project.info?.tracking_modes?.image?.tracks || [];
 
+      const tracks = trackIds.map((trackId) => {
+        const existing = existingTracks.find((t) => t.track_id === trackId);
+        const hasNonEmptyS1 = !!(
+          existing &&
+          Array.isArray(existing.scenes) &&
+          existing.scenes.some(
+            (s) => s.scene_id === "S1" && Array.isArray(s.assets) && s.assets.length > 0
+          )
+        );
+
+        if (hasNonEmptyS1) {
+          // เก็บ track เดิมไว้ทั้งก้อน
+          return existing;
+        }
+
+        // สร้าง track ใหม่ (S1 เปล่า)
+        return {
+          track_id: trackId,
+          scenes: [
+            {
+              scene_id: "S1",
+              assets: [],
+            },
+          ],
+        };
+      });
+
+      // อัพเดท project state ในส่วน image tracking
       const updatedProject = {
         ...project,
         info: {
@@ -39,20 +71,20 @@ function SectionSceneImage({ project }) {
           tracking_modes: {
             ...project.info?.tracking_modes,
             image: {
-              ...existingImageMode,
+              ...project.info?.tracking_modes?.image,
               mindFile: {
                 mind_name: selectedMind.mind_name,
                 mind_id: selectedMind.mind_id,
                 mind_src: selectedMind.mind_src,
                 mind_image: selectedMind.mind_image,
               },
-              // keep existing tracks (if any) by spreading existingImageMode
+              tracks: tracks,
             },
           },
         },
       };
 
-      // Update projectStore
+      // อัพเดท projectStore
       setProject(updatedProject);
     }
   };
@@ -116,24 +148,18 @@ function SectionSceneImage({ project }) {
     const mindImages = imageMode.mindFile?.mind_image || {};
 
     // C. คำนวณและคืนค่า Array
-    // Filter tracks to only those that exist in the selected mindFile (mind_image keys).
-    const mindKeys = Object.keys(mindImages || {});
-    if (mindKeys.length === 0) return [];
-
-    return (imageMode.tracks || [])
-      .filter((track) => mindKeys.includes(track.track_id))
-      .flatMap((track) => {
-        const trackId = track.track_id;
-        const imgsrc = mindImages[trackId] ?? "/default_asset_image/image.png";
-        const scenes = track.scenes || [];
-        return scenes.map((scene) => ({
-          type: "image",
-          imgsrc,
-          scene_id: `IMAGE_${trackId}${scene.scene_id}`, // IMAGE_T1S1
-          track_id: trackId,
-          scene_key: scene.scene_id,
-        }));
-      });
+    return (imageMode.tracks || []).flatMap((track) => {
+      const trackId = track.track_id;
+      const imgsrc = mindImages[trackId] ?? "/default_asset_image/image.png";
+      const scenes = track.scenes || [];
+      return scenes.map((scene) => ({
+        type: "image",
+        imgsrc,
+        scene_id: `IMAGE_${trackId}${scene.scene_id}`, // IMAGE_T1S1
+        track_id: trackId,
+        scene_key: scene.scene_id,
+      }));
+    });
   }, [project]); // 4. Dependency คือ 'project' เท่านั้น
 
   // รายการ tracks ที่มีอยู่
@@ -166,7 +192,9 @@ function SectionSceneImage({ project }) {
               </option>
             ))}
           </select>
-          {loading && <span className="text-sm text-gray-500">Loading...</span>}
+          {loading && (
+            <span className="text-sm text-gray-500">Loading...</span>
+          )}
 
           {/* ปุ่ม Add MindFile */}
           <button
