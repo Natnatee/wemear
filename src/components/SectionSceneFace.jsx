@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import CardSceneFace from "./CardSceneFace";
 import projectStore from "../utils/projectStore";
+import ModalUploadImage from "./ModalUploadImage";
 
 function SectionSceneFace({ project }) {
   const [showAddSceneModal, setShowAddSceneModal] = useState(false);
@@ -8,6 +9,8 @@ function SectionSceneFace({ project }) {
   const { setProject } = projectStore();
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
   const [sceneToDelete, setSceneToDelete] = useState(null); // { track_id, scene_key }
+  const [customSceneImg, setCustomSceneImg] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const handleModalAdd = () => {
     if (!project) return;
@@ -35,9 +38,24 @@ function SectionSceneFace({ project }) {
     }, 0);
     const nextIndex = maxSceneNum + 1;
     const newSceneId = `S${nextIndex}`;
+
+    // Set default image based on scene type
+    const defaultImg =
+      selectedType === "face_mesh"
+        ? "https://supabase.wemear.com/storage/v1/object/public/project-card/face_mesh"
+        : "https://supabase.wemear.com/storage/v1/object/public/project-card/human_head";
+
+    // Use custom image if uploaded, otherwise use default
+    const sceneImage = customSceneImg || defaultImg;
+
     t1.scenes = [
       ...(t1.scenes || []),
-      { scene_id: newSceneId, assets: [], scene_type: selectedType },
+      {
+        scene_id: newSceneId,
+        assets: [],
+        scene_type: selectedType,
+        scene_img: sceneImage,
+      },
     ];
 
     const newFace = { ...face, tracks };
@@ -58,6 +76,7 @@ function SectionSceneFace({ project }) {
 
     setProject(updatedProject);
     setShowAddSceneModal(false);
+    setCustomSceneImg(null); // Reset custom image
   };
 
   // Open confirm-delete modal from CardSceneFace
@@ -119,10 +138,12 @@ function SectionSceneFace({ project }) {
       const trackId = track.track_id;
       const scenes = track.scenes || [];
       return scenes.map((scene) => {
+        // Use scene_img if exists, otherwise fallback to default based on scene_type
         const imgsrc =
-          scene.scene_type === "face_mesh"
-            ? "/assets_face/face_mesh.png"
-            : "/assets_face/human_head.jpg";
+          scene.scene_img ||
+          (scene.scene_type === "face_mesh"
+            ? "https://supabase.wemear.com/storage/v1/object/public/project-card/face_mesh"
+            : "https://supabase.wemear.com/storage/v1/object/public/project-card/human_head");
         return {
           type: "face",
           imgsrc,
@@ -199,9 +220,30 @@ function SectionSceneFace({ project }) {
                     </button>
                   </div>
 
-                  {/* content placeholder */}
-                  <div className="flex-1 flex items-center justify-center text-gray-500">
-                    Select an option and click Add
+                  {/* Upload image section */}
+                  <div className="flex-1 flex flex-col gap-3">
+                    {customSceneImg ? (
+                      <div className="relative">
+                        <img
+                          src={customSceneImg}
+                          alt="Custom scene"
+                          className="w-full h-32 object-cover rounded pb-2"
+                        />
+                        <button
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                          onClick={() => setCustomSceneImg(null)}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+                        onClick={() => setShowUploadModal(true)}
+                      >
+                        Upload Custom Image (Optional)
+                      </button>
+                    )}
                   </div>
 
                   {/* Add button bottom-right */}
@@ -280,6 +322,13 @@ function SectionSceneFace({ project }) {
           </div>
         </div>
       )}
+
+      {/* Upload Image Modal */}
+      <ModalUploadImage
+        isOpen={showUploadModal}
+        isClose={() => setShowUploadModal(false)}
+        setSrc={setCustomSceneImg}
+      />
     </div>
   );
 }

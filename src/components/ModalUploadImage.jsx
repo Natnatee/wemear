@@ -50,7 +50,7 @@ const ModalUploadImage = ({ isOpen, isClose, setSrc }) => {
       );
 
       if (resp.status === 200 || resp.status === 201) {
-        const imageUrl = `https://supabase.wemear.com/storage/v1/object/public/${filepath}?t=${Date.now()}`;
+        const imageUrl = `https://supabase.wemear.com/storage/v1/object/public/${filepath}`;
         if (typeof setSrc === "function") setSrc(imageUrl);
         // close
         if (typeof isClose === "function") isClose();
