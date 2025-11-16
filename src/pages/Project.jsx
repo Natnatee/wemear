@@ -5,6 +5,7 @@ import QRCodeGenerator from "../components/QRCodeGenerator";
 import ModalImageUpdate from "../components/ModalImageUpdate";
 import ProjectUi from "../components/ProjectUi";
 import SectionSceneImage from "../components/SectionSceneImage";
+import SectionSceneFace from "../components/SectionSceneFace";
 import projectStore from "../utils/projectStore.js";
 import axiosInstance from "../utils/axios";
 import { useUpdateProject } from "../hook/useProject";
@@ -62,7 +63,7 @@ function Project() {
           const projectData = response.data[0];
 
           // ใช้ข้อมูลจาก API โดยตรง ไม่แปลง key
-          // จัดการ tool ให้เป็น string 
+          // จัดการ tool ให้เป็น string
           const normalizedProject = {
             ...projectData,
             tool: Array.isArray(projectData.tool)
@@ -273,8 +274,12 @@ function Project() {
               </div>
             </div>
           </div>
-
-          <SectionSceneImage project={project} />
+          {project.tool.includes("Face") && (
+            <SectionSceneFace project={project} />
+          )}
+          {project.tool.includes("Image") && (
+            <SectionSceneImage project={project} />
+          )}
           {/* ส่วนสำหรับ ทำ Project Ui */}
           <button
             onClick={() => setIsProjectUiModalOpen(true)}
