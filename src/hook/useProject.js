@@ -75,7 +75,7 @@ export const useUpdateProject = () => {
             ? project.tool
             : project.tool.split(", ")
           : null,
-        p_info: project.info || null,
+        p_info: project.project_info?.info || null,
       };
 
       const response = await axiosInstance.post(

@@ -4,7 +4,7 @@ import CardSceneImage from "./CardSceneImage";
 import projectStore from "../utils/projectStore";
 import { useMindImages } from "../hook/useMind";
 
-function SectionSceneImage({ project }) {
+function SectionSceneFace({ project }) {
   const [selectedMindName, setSelectedMindName] = useState("");
   const [showTrackSelector, setShowTrackSelector] = useState(false);
   const { setProject } = projectStore();
@@ -277,4 +277,4 @@ function SectionSceneImage({ project }) {
   );
 }
 
-export default SectionSceneImage;
+export default SectionSceneFace;

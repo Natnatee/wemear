@@ -3,9 +3,9 @@ import axiosInstance from "../utils/axios";
 // Utilities to extract and share unique asset srcs from a project
 export const getUniqueAssetSrcs = (project) => {
   const uniqueSrcs = new Set();
-  if (!project || !project.info || !project.info.tracking_modes) return [];
+  if (!project || !project.project_info || !project.project_info.info.tracking_modes) return [];
 
-  const trackingModes = project.info.tracking_modes;
+  const trackingModes = project.project_info.info.tracking_modes;
   Object.keys(trackingModes).forEach((modeKey) => {
     const mode = trackingModes[modeKey];
 

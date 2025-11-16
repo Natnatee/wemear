@@ -62,16 +62,12 @@ function Project() {
           const projectData = response.data[0];
 
           // ใช้ข้อมูลจาก API โดยตรง ไม่แปลง key
-          // จัดการ tool ให้เป็น string และ info structure
+          // จัดการ tool ให้เป็น string 
           const normalizedProject = {
             ...projectData,
             tool: Array.isArray(projectData.tool)
               ? projectData.tool.join(", ")
               : projectData.tool,
-            info: projectData.project_info?.info || {
-              tracking_modes: {},
-              shared_assets: [],
-            },
           };
 
           setProject(normalizedProject);

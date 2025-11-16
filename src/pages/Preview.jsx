@@ -36,12 +36,12 @@ function Preview() {
     // ✅ จุดแก้ไขหลัก: เพิ่มการตรวจสอบความปลอดภัยของ projectState
     // ป้องกันการ CRASH เมื่อ projectState.info หรือ projectState.info.tracking_modes เป็น undefined
     // ************************************************
-    if (!projectState || !projectState.info?.tracking_modes?.image) {
+    if (!projectState || !projectState.project_info.info?.tracking_modes?.image) {
       return {}; // คืนค่า Object เปล่า เพื่อไม่ให้โค้ดส่วนล่าง Crash
     }
 
     // const sharedAssets = projectState.info.shared_assets || []; // ไม่ใช้แล้ว เพราะเปลี่ยนโครงสร้างข้อมูล
-    const imageTrackingMode = projectState.info.tracking_modes.image;
+    const imageTrackingMode = projectState.project_info.info.tracking_modes.image;
 
     const transformedScenes = {};
 

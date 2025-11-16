@@ -156,7 +156,7 @@ const projectStore = create((set, get) => ({
       let assetFound = false;
 
       // ค้นหา asset ในทุก tracking mode
-      const trackingModes = updatedProject.info.tracking_modes;
+      const trackingModes = updatedProject.project_info.info.tracking_modes;
 
       for (const modeKey in trackingModes) {
         const mode = trackingModes[modeKey];
@@ -231,7 +231,7 @@ const projectStore = create((set, get) => ({
       let targetScene = null;
 
       const updatedProject = { ...currentProject };
-      const trackingMode = updatedProject.info.tracking_modes[trackingModeKey];
+      const trackingMode = updatedProject.project_info.info.tracking_modes[trackingModeKey];
 
       if (!trackingMode) {
         console.error(`Tracking mode ${trackingModeKey} not found.`);
@@ -309,7 +309,7 @@ const projectStore = create((set, get) => ({
       let assetRemoved = false;
 
       // ค้นหาและลบ asset ในทุก tracking mode
-      const trackingModes = updatedProject.info.tracking_modes;
+      const trackingModes = updatedProject.project_info.info.tracking_modes;
 
       for (const modeKey in trackingModes) {
         const mode = trackingModes[modeKey];
