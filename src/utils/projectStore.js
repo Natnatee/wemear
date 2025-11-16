@@ -161,7 +161,7 @@ const projectStore = create((set, get) => ({
       for (const modeKey in trackingModes) {
         const mode = trackingModes[modeKey];
 
-        // สำหรับ image tracking (มี tracks)
+
         if (mode.tracks) {
           for (const track of mode.tracks) {
             for (const scene of track.scenes) {
@@ -314,7 +314,6 @@ const projectStore = create((set, get) => ({
       for (const modeKey in trackingModes) {
         const mode = trackingModes[modeKey];
 
-        // สำหรับ image tracking (มี tracks)
         if (mode.tracks) {
           for (const track of mode.tracks) {
             for (const scene of track.scenes) {
