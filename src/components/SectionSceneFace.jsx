@@ -6,6 +6,8 @@ function SectionSceneFace({ project }) {
   const [showAddSceneModal, setShowAddSceneModal] = useState(false);
   const [selectedTab, setSelectedTab] = useState("item");
   const { setProject } = projectStore();
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+  const [sceneToDelete, setSceneToDelete] = useState(null); // { track_id, scene_key }
 
   const handleModalAdd = () => {
     if (!project) return;
@@ -26,9 +28,17 @@ function SectionSceneFace({ project }) {
       tracks.push(t1);
     }
 
-    const nextIndex = (t1.scenes?.length || 0) + 1; // simple increment
+    // Find max scene number (e.g., S1, S2, S3 -> max is 3)
+    const maxSceneNum = (t1.scenes || []).reduce((max, scene) => {
+      const match = scene.scene_id?.match(/^S(\d+)$/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    const nextIndex = maxSceneNum + 1;
     const newSceneId = `S${nextIndex}`;
-    t1.scenes = [...(t1.scenes || []), { scene_id: newSceneId, assets: [], scene_type: selectedType }];
+    t1.scenes = [
+      ...(t1.scenes || []),
+      { scene_id: newSceneId, assets: [], scene_type: selectedType },
+    ];
 
     const newFace = { ...face, tracks };
 
@@ -48,6 +58,52 @@ function SectionSceneFace({ project }) {
 
     setProject(updatedProject);
     setShowAddSceneModal(false);
+  };
+
+  // Open confirm-delete modal from CardSceneFace
+  const openModalConfirmDelete = (track_id, scene_key) => {
+    setSceneToDelete({ track_id, scene_key });
+    setShowConfirmDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!project || !sceneToDelete) return;
+
+    const { track_id, scene_key } = sceneToDelete;
+
+    const projectInfo = project.project_info || {};
+    const info = projectInfo.info || {};
+    const tracking_modes = info.tracking_modes || {};
+    const face = tracking_modes.face || { tracks: [] };
+
+    const tracks = (face.tracks || []).map((t) => {
+      if (t.track_id !== track_id) return t;
+      // Remove the scene with matching scene_id
+      const newScenes = (t.scenes || []).filter(
+        (s) => s.scene_id !== scene_key
+      );
+      return { ...t, scenes: newScenes };
+    });
+
+    const newFace = { ...face, tracks };
+
+    const updatedProject = {
+      ...project,
+      project_info: {
+        ...projectInfo,
+        info: {
+          ...info,
+          tracking_modes: {
+            ...tracking_modes,
+            face: newFace,
+          },
+        },
+      },
+    };
+
+    setProject(updatedProject);
+    setShowConfirmDeleteModal(false);
+    setSceneToDelete(null);
   };
 
   const sceneCards = useMemo(() => {
@@ -164,7 +220,11 @@ function SectionSceneFace({ project }) {
 
           {/* แสดง Scene Cards ที่มีอยู่ (สูงสุด 7 cards เพราะตำแหน่งแรกเป็นปุ่ม +) */}
           {sceneCards.slice(0, 7).map((card) => (
-            <CardSceneFace key={card.scene_id} card={card} />
+            <CardSceneFace
+              key={card.scene_id}
+              card={card}
+              openModalConfirmDelete={openModalConfirmDelete}
+            />
           ))}
         </div>
       </div>
@@ -175,6 +235,50 @@ function SectionSceneFace({ project }) {
           className="fixed inset-0 z-0"
           onClick={() => setShowAddSceneModal(false)}
         />
+      )}
+
+      {/* Confirm delete modal */}
+      {showConfirmDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black opacity-30"
+            onClick={() => setShowConfirmDeleteModal(false)}
+          />
+
+          <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative z-10">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-lg font-semibold">Confirm Delete</h4>
+              <button
+                className="text-gray-600 hover:text-gray-900"
+                onClick={() => setShowConfirmDeleteModal(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="text-sm text-gray-700 mb-4">
+              Are you sure you want to delete scene{" "}
+              <span className="font-medium">{sceneToDelete?.scene_key}</span>{" "}
+              from track{" "}
+              <span className="font-medium">{sceneToDelete?.track_id}</span>?
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-3 py-1 border rounded hover:bg-gray-100"
+                onClick={() => setShowConfirmDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const CardSceneFace = ({ card }) => {
+const CardSceneFace = ({ card, openModalConfirmDelete }) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -22,11 +22,29 @@ const CardSceneFace = ({ card }) => {
 
   return (
     <>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen(true)}
-        className="bg-white rounded-lg shadow p-3 flex flex-col items-start"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") setOpen(true);
+        }}
+        className="bg-white rounded-lg shadow p-3 flex flex-col items-start relative cursor-pointer"
       >
+        {/* X button to open delete confirmation modal (stopPropagation so preview not opened) */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (openModalConfirmDelete)
+              openModalConfirmDelete(card.track_id, card.scene_key);
+          }}
+          className="absolute top-2 right-2 bg-white/80 rounded-full p-1 text-sm hover:bg-gray-100"
+          aria-label="Delete scene"
+        >
+          ×
+        </button>
+
         <img
           src={card.imgsrc}
           alt={card.scene_id}
@@ -36,15 +54,12 @@ const CardSceneFace = ({ card }) => {
         <div className="text-xs text-gray-500">
           Track: {card.track_id} · Scene: {card.scene_key}
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
           {/* backdrop */}
-          <div
-            className="absolute inset-0"
-            onClick={() => setOpen(false)}
-          />
+          <div className="absolute inset-0" onClick={() => setOpen(false)} />
 
           {/* modal - ใช้ flex column เพื่อจัดเรียงรูปและข้อมูล */}
           <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-4 py-6 sm:px-8 sm:py-8">
@@ -70,7 +85,7 @@ const CardSceneFace = ({ card }) => {
                   onClick={() => {
                     setOpen(false);
                     const currentStateValue = `FACE_${card.track_id}${card.scene_key}`;
-                    localStorage.setItem('CurrentState', currentStateValue);
+                    localStorage.setItem("CurrentState", currentStateValue);
                     navigate("/preview");
                   }}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
