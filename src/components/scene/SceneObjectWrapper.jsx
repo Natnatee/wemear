@@ -289,9 +289,17 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
     (state) => state.clearCurrentAssetSelect
   );
   const meshRef = useRef();
+  const [aspectRatio, setAspectRatio] = useState(1);
 
   const texture = useMemo(() => {
     const video = createVideoElement(safe.src);
+
+    // อัพเดท aspect ratio เมื่อวิดีโอโหลดเสร็จ
+    video.addEventListener("loadedmetadata", () => {
+      const ratio = video.videoWidth / video.videoHeight;
+      setAspectRatio(ratio);
+    });
+
     return new VideoTexture(video);
   }, [safe.src]);
 
@@ -332,7 +340,7 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
           setCurrentAssetSelect(safe);
         }}
       >
-        <planeGeometry args={[1, 1]} />
+        <planeGeometry args={[aspectRatio, 1]} />
         <meshBasicMaterial map={texture} side={DoubleSide} />
       </mesh>
       {isSelected && meshRef.current && (
@@ -404,6 +412,14 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
   );
   const meshRef = useRef();
 
+  // คำนวณ aspect ratio จากรูปจริง
+  const aspectRatio = useMemo(() => {
+    if (texture.image) {
+      return texture.image.width / texture.image.height;
+    }
+    return 1;
+  }, [texture]);
+
   const handleTransformEnd = () => {
     const pos = meshRef.current.position;
     const rot = meshRef.current.rotation;
@@ -441,7 +457,7 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
           setCurrentAssetSelect(safe);
         }}
       >
-        <planeGeometry args={[1, 1]} />
+        <planeGeometry args={[aspectRatio, 1]} />
         <meshBasicMaterial map={texture} side={DoubleSide} />
       </mesh>
       {isSelected && meshRef.current && (
