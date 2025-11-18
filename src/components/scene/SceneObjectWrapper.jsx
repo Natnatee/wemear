@@ -105,26 +105,29 @@ function DeleteButton({ position, onDelete }) {
  * Component สำหรับแสดงและแก้ไข Scale
  */
 function ScaleInput({ position, scale, onScaleChange, onClearSelection }) {
-  const [localScale, setLocalScale] = useState(scale.toFixed(2));
+  const [localScale, setLocalScale] = useState({
+    x: scale.x.toFixed(2),
+    y: scale.y.toFixed(2),
+    z: scale.z.toFixed(2),
+  });
 
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setLocalScale(value);
+  const handleChange = (axis, value) => {
+    setLocalScale((prev) => ({ ...prev, [axis]: value }));
   };
 
-  const handleBlur = () => {
-    const numValue = parseFloat(localScale);
+  const handleBlur = (axis) => {
+    const numValue = parseFloat(localScale[axis]);
     if (!isNaN(numValue) && numValue > 0) {
-      onScaleChange(numValue);
+      onScaleChange({ ...scale, [axis]: numValue });
       onClearSelection();
     } else {
-      setLocalScale(scale.toFixed(2));
+      setLocalScale((prev) => ({ ...prev, [axis]: scale[axis].toFixed(2) }));
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e, axis) => {
     if (e.key === "Enter") {
-      handleBlur();
+      handleBlur(axis);
     }
   };
 
@@ -135,19 +138,49 @@ function ScaleInput({ position, scale, onScaleChange, onClearSelection }) {
         style={{ transform: "translate(50%, -50%)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-1">
-          <span className="text-xs font-semibold text-gray-600">Scale:</span>
-          <input
-            type="number"
-            value={localScale}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            onKeyPress={handleKeyPress}
-            onClick={(e) => e.stopPropagation()}
-            step="0.1"
-            min="0.1"
-            className="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-blue-500"
-          />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-semibold text-gray-600 w-4">X:</span>
+            <input
+              type="number"
+              value={localScale.x}
+              onChange={(e) => handleChange("x", e.target.value)}
+              onBlur={() => handleBlur("x")}
+              onKeyPress={(e) => handleKeyPress(e, "x")}
+              onClick={(e) => e.stopPropagation()}
+              step="0.1"
+              min="0.1"
+              className="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-semibold text-gray-600 w-4">Y:</span>
+            <input
+              type="number"
+              value={localScale.y}
+              onChange={(e) => handleChange("y", e.target.value)}
+              onBlur={() => handleBlur("y")}
+              onKeyPress={(e) => handleKeyPress(e, "y")}
+              onClick={(e) => e.stopPropagation()}
+              step="0.1"
+              min="0.1"
+              className="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-semibold text-gray-600 w-4">Z:</span>
+            <input
+              type="number"
+              value={localScale.z}
+              onChange={(e) => handleChange("z", e.target.value)}
+              onBlur={() => handleBlur("z")}
+              onKeyPress={(e) => handleKeyPress(e, "z")}
+              onClick={(e) => e.stopPropagation()}
+              step="0.1"
+              min="0.1"
+              className="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-blue-500"
+            />
+          </div>
         </div>
       </div>
     </Html>
@@ -199,7 +232,7 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
 
   const handleScaleChange = (newScale) => {
     console.log("📏 Scale changed to:", newScale);
-    groupRef.current.scale.set(newScale, newScale, newScale);
+    groupRef.current.scale.set(newScale.x, newScale.y, newScale.z);
     const pos = groupRef.current.position;
     const rot = groupRef.current.rotation;
     const scale = groupRef.current.scale;
@@ -239,7 +272,7 @@ function Model3D({ safe, isSelected, orbitControlsRef }) {
               safe.position.y + safe.scale.y * 0.5,
               safe.position.z,
             ]}
-            scale={safe.scale.x}
+            scale={safe.scale}
             onScaleChange={handleScaleChange}
             onClearSelection={clearCurrentAssetSelect}
           />
@@ -320,7 +353,7 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
 
   const handleScaleChange = (newScale) => {
     console.log("📏 Video scale changed to:", newScale);
-    meshRef.current.scale.set(newScale, newScale, newScale);
+    meshRef.current.scale.set(newScale.x, newScale.y, newScale.z);
     const pos = meshRef.current.position;
     const rot = meshRef.current.rotation;
     const scale = meshRef.current.scale;
@@ -362,7 +395,7 @@ function VideoObject({ safe, isSelected, orbitControlsRef }) {
               safe.position.y + safe.scale.y * 0.5,
               safe.position.z,
             ]}
-            scale={safe.scale.x}
+            scale={safe.scale}
             onScaleChange={handleScaleChange}
             onClearSelection={clearCurrentAssetSelect}
           />
@@ -437,7 +470,7 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
 
   const handleScaleChange = (newScale) => {
     console.log("📏 Image scale changed to:", newScale);
-    meshRef.current.scale.set(newScale, newScale, newScale);
+    meshRef.current.scale.set(newScale.x, newScale.y, newScale.z);
     const pos = meshRef.current.position;
     const rot = meshRef.current.rotation;
     const scale = meshRef.current.scale;
@@ -479,7 +512,7 @@ function ImageObject({ safe, isSelected, orbitControlsRef }) {
               safe.position.y + safe.scale.y * 0.5,
               safe.position.z,
             ]}
-            scale={safe.scale.x}
+            scale={safe.scale}
             onScaleChange={handleScaleChange}
             onClearSelection={clearCurrentAssetSelect}
           />
