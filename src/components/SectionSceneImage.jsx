@@ -217,52 +217,80 @@ function SectionSceneImage({ project }) {
         </div>
       </div>
 
-      {/* Container สำหรับ cards พร้อม scroll bar แกน x */}
-      <div className="overflow-x-auto">
-        <div className="grid grid-cols-4 grid-rows-2 gap-6 min-w-max lg:min-w-0">
-          {/* Card แรก: ปุ่มเพิ่ม Scene */}
-          <div className="relative">
-            <button
-              onClick={() => setShowTrackSelector(!showTrackSelector)}
-              className="w-full h-48 border-2 border-dashed border-red-500 rounded-lg flex flex-col items-center justify-center hover:bg-red-50 transition-colors group"
-            >
-              <div className="text-6xl text-red-500 font-light mb-2">+</div>
-              <span className="text-sm font-medium text-red-600">
-                Add Scene
-              </span>
-            </button>
+      {/* Container สำหรับ cards พร้อม scroll bar แกน x แบบ snap */}
+      <div className="overflow-x-auto snap-x snap-mandatory">
+        <div className="inline-flex gap-6 pb-2">
+          {/* แบ่งการ์ดเป็นกลุ่มๆ ละ 8 การ์ด (4 คอลัมน์ x 2 แถว) */}
+          {Array.from({
+            length: Math.ceil((sceneCards.length + 1) / 8),
+          }).map((_, pageIndex) => {
+            const startIdx = pageIndex * 8;
+            const cardsInPage = sceneCards.slice(startIdx, startIdx + 7); // 7 การ์ด + 1 ปุ่ม = 8
+            const showAddButton = pageIndex === 0;
 
-            {/* Dropdown สำหรับเลือก Track */}
-            {showTrackSelector && (
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                <div className="p-2">
-                  <div className="text-xs font-semibold text-gray-600 px-2 py-1 mb-1">
-                    Select Track:
+            return (
+              <div
+                key={pageIndex}
+                className="snap-start grid grid-cols-4 grid-rows-2 gap-6 flex-shrink-0"
+                style={{ width: "calc(100% - 2rem)" }}
+              >
+                {/* Card แรก: ปุ่มเพิ่ม Scene (แสดงเฉพาะหน้าแรก) */}
+                {showAddButton && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowTrackSelector(!showTrackSelector)}
+                      className="w-full h-48 border-2 border-dashed border-red-500 rounded-lg flex flex-col items-center justify-center hover:bg-red-50 transition-colors group"
+                    >
+                      <div className="text-6xl text-red-500 font-light mb-2">
+                        +
+                      </div>
+                      <span className="text-sm font-medium text-red-600">
+                        Add Scene
+                      </span>
+                    </button>
+
+                    {/* Dropdown สำหรับเลือก Track */}
+                    {showTrackSelector && (
+                      <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        <div className="p-2">
+                          <div className="text-xs font-semibold text-gray-600 px-2 py-1 mb-1">
+                            Select Track:
+                          </div>
+                          {availableTracks.length > 0 ? (
+                            availableTracks.map((track) => (
+                              <button
+                                key={track.track_id}
+                                onClick={() => handleAddScene(track.track_id)}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded transition-colors"
+                              >
+                                {track.track_id} ({track.scenes.length} scenes)
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-3 py-2 text-sm text-gray-500">
+                              No tracks available
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {availableTracks.length > 0 ? (
-                    availableTracks.map((track) => (
-                      <button
-                        key={track.track_id}
-                        onClick={() => handleAddScene(track.track_id)}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded transition-colors"
-                      >
-                        {track.track_id} ({track.scenes.length} scenes)
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-3 py-2 text-sm text-gray-500">
-                      No tracks available
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+                )}
 
-          {/* แสดง Scene Cards ที่มีอยู่ (สูงสุด 7 cards เพราะตำแหน่งแรกเป็นปุ่ม +) */}
-          {sceneCards.slice(0, 7).map((card) => (
-            <CardSceneImage key={card.scene_id} card={card} />
-          ))}
+                {/* แสดง Scene Cards ในหน้านี้ */}
+                {cardsInPage.map((card) => (
+                  <CardSceneImage key={card.scene_id} card={card} />
+                ))}
+
+                {/* เติม div เปล่าให้ครบ 8 ช่อง (4x2) */}
+                {Array.from({
+                  length: 8 - cardsInPage.length - (showAddButton ? 1 : 0),
+                }).map((_, emptyIdx) => (
+                  <div key={`empty-${pageIndex}-${emptyIdx}`} />
+                ))}
+              </div>
+            );
+          })}
         </div>
       </div>
 
